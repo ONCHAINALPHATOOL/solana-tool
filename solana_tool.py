@@ -51,14 +51,14 @@ if st.button("Agregar Wallet"):
 st.markdown("---")
 
 # Sección para mostrar entidades y wallets
-st.header("Entidades y Wallets")
+st.header("Listado de Entidades y Wallets")
 for entidad, wallets in entidades_data.items():
     st.subheader(f"📌 Entidad: **{entidad}**")
     for wallet in wallets:
         st.markdown(f"🔹 **Label**: {wallet['label']}, **Dirección**: `{wallet['direccion']}`")
 
 # Otra sección para mejorar la gestión de wallets
-st.header("Gestionar Wallets")
+st.header("Buscador de Wallets")
 
 # Clave única para la selección de entidades y wallets
 entidad_seleccionada = st.selectbox("Selecciona una Entidad", list(entidades_data.keys()), key="entidad_gestionar")
@@ -78,6 +78,9 @@ st.markdown("""
 - Puedes agregar nuevas wallets a las entidades.
 - Las wallets agregadas se mostrarán en esta misma página.
 """)
+
+# Separador visual
+st.markdown("---")
 
 # Sección para gestionar (editar y eliminar) wallets
 st.header("Gestionar Wallets")
