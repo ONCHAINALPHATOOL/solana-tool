@@ -27,33 +27,51 @@ def cargar_datos():
 cargar_datos()
 
 # Encabezado principal de la aplicación
-st.title("Gestión de Wallets y Entidades")
+# Título principal
+st.title("🚀 Gestión de Wallets y Entidades")
 
-# Sección para agregar nuevas entidades y wallets
+# Sección para agregar una nueva entidad y wallet
 st.header("Agregar Entidad y Wallet")
+nueva_entidad = st.text_input("📝 Nombre de la Entidad")
+nueva_wallet = st.text_input("🔑 Dirección de la Wallet")
+nuevo_label = st.text_input("🏷️ Label de la Wallet")
 
-# Inputs para agregar una entidad y una wallet
-nueva_entidad = st.text_input("Nombre de la Entidad")
-nueva_wallet = st.text_input("Dirección de la Wallet")
-nuevo_label = st.text_input("Label de la Wallet")
-
-# Botón para agregar una wallet
+# Botón para agregar
 if st.button("Agregar Wallet"):
     if nueva_entidad and nueva_wallet and nuevo_label:
         if nueva_entidad not in entidades_data:
             entidades_data[nueva_entidad] = []
         entidades_data[nueva_entidad].append({"label": nuevo_label, "direccion": nueva_wallet})
-        guardar_datos()
-        st.success(f"Wallet agregada a la entidad {nueva_entidad}")
+        st.success(f"✅ Wallet agregada a la entidad '{nueva_entidad}'")
     else:
-        st.error("Por favor, completa todos los campos")
+        st.error("❌ Por favor, completa todos los campos")
 
-# Sección para mostrar las entidades y wallets actuales
+# Separador visual
+st.markdown("---")
+
+# Sección para mostrar entidades y wallets
 st.header("Entidades y Wallets")
 for entidad, wallets in entidades_data.items():
-    st.subheader(f"Entidad: {entidad}")
+    st.subheader(f"📌 Entidad: **{entidad}**")
     for wallet in wallets:
-        st.write(f"Label: {wallet['label']}, Dirección: {wallet['direccion']}")
+        st.markdown(f"🔹 **Label**: {wallet['label']}, **Dirección**: `{wallet['direccion']}`")
+
+# Otra sección para mejorar la gestión de wallets
+st.header("Gestionar Wallets")
+entidad_seleccionada = st.selectbox("Selecciona una Entidad", list(entidades_data.keys()))
+
+if entidad_seleccionada:
+    wallet_seleccionada = st.selectbox("Selecciona una Wallet", [wallet['label'] for wallet in entidades_data[entidad_seleccionada]])
+    for wallet in entidades_data[entidad_seleccionada]:
+        if wallet["label"] == wallet_seleccionada:
+            st.write(f"🔑 **Dirección**: `{wallet['direccion']}`")
+
+# Agregar algunas notas finales o instrucciones
+st.markdown("""
+### 💡 Notas:
+- Puedes agregar nuevas wallets a las entidades.
+- Las wallets agregadas se mostrarán en esta misma página.
+""")
 
 # Sección para gestionar (editar y eliminar) wallets
 st.header("Gestionar Wallets")
