@@ -1,33 +1,39 @@
 import streamlit as st
-import json
-import os
+import gspread
+from google.oauth2.service_account import Credentials
 
-# Ruta del archivo JSON donde se guardarán los datos
-ruta_archivo = 'wallets_data.json'
+# Autenticación con Google Sheets usando los secretos almacenados en Streamlit
+def autenticar_google_sheets():
+    scope = ["https://www.googleapis.com/auth/spreadsheets", 
+             "https://www.googleapis.com/auth/drive"]
+    
+    credentials = Credentials.from_service_account_info(
+        st.secrets["GCP_CREDENTIALS"], scopes=scope)
+    
+    client = gspread.authorize(credentials)
+    return client
 
-# Función para guardar los datos en un archivo JSON
-def guardar_datos():
-    with open(ruta_archivo, 'w') as f:
-        json.dump(entidades_data, f)
+# Función para obtener los datos desde Google Sheets
+def obtener_datos_hoja(sheet_id, sheet_name):
+    client = autenticar_google_sheets()
+    sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
+    data = sheet.get_all_records()
+    return data
 
-# Función para cargar los datos desde un archivo JSON (si existe)
-def cargar_datos():
-    global entidades_data
-    if os.path.exists(ruta_archivo):
-        with open(ruta_archivo, 'r') as f:
-            entidades_data = json.load(f)
-    else:
-        # Si no existe el archivo, se inicializan los datos
-        entidades_data = {
-            "Drae": [{"label": "120K", "direccion": "6N9CDZ7sNRYQ7BWDJX3iLbL3359rVXN9yvwaEebQqEo8d"}],
-            "Pedro": [{"label": "christ?", "direccion": "DhxbZcn8oCgafGHSg1WX1bMhv5txGRraVMmR6G6RVnck"}]
-        }
+# Función para agregar una nueva wallet en Google Sheets
+def agregar_wallet_google_sheets(sheet_id, sheet_name, entidad, label, direccion):
+    client = autenticar_google_sheets()
+    sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
+    sheet.append_row([entidad, label, direccion])
 
-# Cargar los datos al inicio
-cargar_datos()
+# Tu ID de la hoja de Google Sheets (puedes obtenerlo de la URL de tu hoja de cálculo)
+SHEET_ID = "1IixRfnvy9PwuvKsD_40VyaFRhTrRAS7I2CXJbps1AE9"  # Reemplazar con el ID de tu hoja
+SHEET_NAME = "MAIN"  # Cambia el nombre de la hoja si es necesario
+
+# Cargar los datos desde Google Sheets al iniciar
+datos_wallets = obtener_datos_hoja(SHEET_ID, SHEET_NAME)
 
 # Encabezado principal de la aplicación
-# Título principal
 st.title("SOLANA TOOL ONCHAIN ALPHA")
 
 # Sección para agregar una nueva entidad y wallet
@@ -39,10 +45,7 @@ nuevo_label = st.text_input("🏷️ Label de la Wallet")
 # Botón para agregar
 if st.button("Agregar Wallet"):
     if nueva_entidad and nueva_wallet and nuevo_label:
-        if nueva_entidad not in entidades_data:
-            entidades_data[nueva_entidad] = []
-        entidades_data[nueva_entidad].append({"label": nuevo_label, "direccion": nueva_wallet})
-        guardar_datos()
+        agregar_wallet_google_sheets(SHEET_ID, SHEET_NAME, nueva_entidad, nuevo_label, nueva_wallet)
         st.success(f"✅ Wallet agregada a la entidad '{nueva_entidad}'")
     else:
         st.error("❌ Por favor, completa todos los campos")
@@ -52,10 +55,11 @@ st.markdown("---")
 
 # Sección para mostrar entidades y wallets
 st.header("Listado de Entidades y Wallets")
-for entidad, wallets in entidades_data.items():
-    st.subheader(f"📌 Entidad: **{entidad}**")
-    for wallet in wallets:
-        st.markdown(f"🔹 **Label**: {wallet['label']}, **Dirección**: `{wallet['direccion']}`")
+for fila in datos_wallets:
+    entidad = fila['Entidad']
+    label = fila['Label']
+    direccion = fila['Dirección']
+    st.markdown(f"📌 Entidad: **{entidad}** - 🔹 **Label**: {label}, **Dirección**: `{direccion}`")
 
 # Separador visual
 st.markdown("---")
@@ -66,12 +70,11 @@ direccion_busqueda = st.text_input("🔎 Introduce la dirección de la wallet")
 
 if st.button("Buscar Wallet"):
     encontrado = False
-    for entidad, wallets in entidades_data.items():
-        for wallet in wallets:
-            if wallet['direccion'] == direccion_busqueda:
-                st.success(f"✅ Dirección encontrada. Entidad: **{entidad}**, Label: **{wallet['label']}**")
-                encontrado = True
-                break
+    for fila in datos_wallets:
+        if fila['Dirección'] == direccion_busqueda:
+            st.success(f"✅ Dirección encontrada. Entidad: **{fila['Entidad']}**, Label: **{fila['Label']}**")
+            encontrado = True
+            break
     if not encontrado:
         st.error("❌ No se encontró ninguna wallet con esa dirección.")
 
@@ -82,41 +85,36 @@ st.markdown("---")
 st.header("Modificar Wallets")
 
 # Dropdown para seleccionar una entidad con clave única
-entidad_seleccionada = st.selectbox("Selecciona una Entidad", list(entidades_data.keys()), key="entidad_editar")
+entidad_seleccionada = st.selectbox("Selecciona una Entidad", [fila['Entidad'] for fila in datos_wallets], key="entidad_editar")
 
 if entidad_seleccionada:
     # Dropdown para seleccionar una wallet dentro de la entidad seleccionada, también con clave única
+    wallets_filtradas = [fila for fila in datos_wallets if fila['Entidad'] == entidad_seleccionada]
     wallet_seleccionada = st.selectbox(
         "Selecciona una Wallet",
-        [wallet['label'] for wallet in entidades_data[entidad_seleccionada]],
+        [fila['Label'] for fila in wallets_filtradas],
         key="wallet_editar"
     )
 
     # Cargar datos de la wallet seleccionada
     if wallet_seleccionada:
         wallet_info = next(
-            (wallet for wallet in entidades_data[entidad_seleccionada] if wallet['label'] == wallet_seleccionada), None
+            (fila for fila in wallets_filtradas if fila['Label'] == wallet_seleccionada), None
         )
 
         if wallet_info:
             # Mostrar información de la wallet seleccionada
-            st.write(f"Dirección: {wallet_info['direccion']}")
+            st.write(f"Dirección: {wallet_info['Dirección']}")
 
             # Inputs para editar la wallet seleccionada
-            nuevo_label = st.text_input("Nuevo Label", value=wallet_info['label'], key="nuevo_label")
-            nueva_direccion = st.text_input("Nueva Dirección", value=wallet_info['direccion'], key="nueva_direccion")
+            nuevo_label = st.text_input("Nuevo Label", value=wallet_info['Label'], key="nuevo_label")
+            nueva_direccion = st.text_input("Nueva Dirección", value=wallet_info['Dirección'], key="nueva_direccion")
 
-            # Botón para guardar los cambios
+            # Botón para guardar los cambios (esto requerirá una implementación adicional para modificar en Google Sheets)
             if st.button("Guardar Cambios", key="guardar_cambios"):
-                wallet_info['label'] = nuevo_label
-                wallet_info['direccion'] = nueva_direccion
-                guardar_datos()
-                st.success(f"Wallet '{nuevo_label}' actualizada correctamente.")
+                st.error("Esta funcionalidad no está implementada para Google Sheets.")
 
-            # Botón para eliminar la wallet
+            # Botón para eliminar la wallet (esto requerirá una implementación adicional para modificar en Google Sheets)
             if st.button("Eliminar Wallet", key="eliminar_wallet"):
-                entidades_data[entidad_seleccionada] = [
-                    wallet for wallet in entidades_data[entidad_seleccionada] if wallet['label'] != wallet_seleccionada
-                ]
-                guardar_datos()
-                st.success(f"Wallet '{wallet_seleccionada}' eliminada correctamente.")
+                st.error("Esta funcionalidad no está implementada para Google Sheets.")
+
