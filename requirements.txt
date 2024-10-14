@@ -2,3 +2,4 @@ streamlit
 gspread
 google-auth
 pandas
+solana==0.21.0
