@@ -35,15 +35,38 @@ ARCHIVO_JSON = "/wallets_data.json"
 # Cargar los datos desde Dropbox al iniciar
 datos_wallets = cargar_json_desde_dropbox(ARCHIVO_JSON)
 
-# Crear pestañas para organizar las vistas
-opciones = ["Agregar/Búsqueda/Modificar Wallets", "Listado de Entidades"]
-seleccion = st.sidebar.radio("Selecciona una opción", opciones)
+# ------ AÑADIR CSS PERSONALIZADO PARA LOS BOTONES AQUÍ ------
+st.markdown("""
+    <style>
+    .option {
+        display: inline-block;
+        border-radius: 12px;
+        background-color: #008CBA;
+        color: white;
+        text-align: center;
+        padding: 15px 32px;
+        text-decoration: none;
+        font-size: 16px;
+        margin: 10px 2px;
+        cursor: pointer;
+        transition-duration: 0.4s;
+    }
+    
+    .option:hover {
+        background-color: #4CAF50;
+        color: white;
+    }
+    </style>
+""", unsafe_allow_html=True)
+# ------------------------------------------------------------
 
-# Pestaña 1: Agregar Entidad y Wallet, Buscar Wallet y Modificar Wallet
-if seleccion == "Agregar/Búsqueda/Modificar Wallets":
-    # Encabezado principal de la aplicación
-    st.title("SOLANA TOOL ONCHAIN ALPHA")
+# Encabezado principal de la aplicación
+st.title("SOLANA TOOL ONCHAIN ALPHA")
 
+# Radiobuttons para seleccionar la opción
+opcion = st.radio("Selecciona una opción", ("Agregar/Búsqueda/Modificar Wallets", "Listado de Entidades"))
+
+if opcion == "Agregar/Búsqueda/Modificar Wallets":
     # Sección para agregar una nueva entidad y wallet
     st.header("Agregar Entidad y Wallet")
     nueva_entidad = st.text_input("📝 Nombre de la Entidad")
@@ -64,9 +87,6 @@ if seleccion == "Agregar/Búsqueda/Modificar Wallets":
         else:
             st.error("❌ Por favor, completa todos los campos")
 
-    # Separador visual
-    st.markdown("---")
-
     # Sección para buscar una wallet por dirección
     st.header("Buscar Wallet por Dirección")
     direccion_busqueda = st.text_input("🔎 Introduce la dirección de la wallet")
@@ -84,17 +104,14 @@ if seleccion == "Agregar/Búsqueda/Modificar Wallets":
         if not encontrado:
             st.error("❌ No se encontró ninguna wallet con esa dirección.")
 
-    # Separador visual
-    st.markdown("---")
-
     # Sección para gestionar (editar y eliminar) wallets
     st.header("Modificar Wallets")
-
-    # Dropdown para seleccionar una entidad con clave única
+    
+    # Dropdown para seleccionar una entidad
     entidad_seleccionada = st.selectbox("Selecciona una Entidad", list(datos_wallets.keys()), key="entidad_editar")
 
     if entidad_seleccionada:
-        # Dropdown para seleccionar una wallet dentro de la entidad seleccionada, también con clave única
+        # Dropdown para seleccionar una wallet
         wallets_filtradas = datos_wallets[entidad_seleccionada]
         wallet_seleccionada = st.selectbox(
             "Selecciona una Wallet",
@@ -129,13 +146,12 @@ if seleccion == "Agregar/Búsqueda/Modificar Wallets":
                     guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
                     st.success("✅ Wallet eliminada correctamente.")
 
-# Pestaña 2: Listado de Entidades y Wallets
-elif seleccion == "Listado de Entidades":
-    st.title("Listado de Entidades y Wallets")
-    
-    # Crear botones por entidad para desplegar información de wallets
+elif opcion == "Listado de Entidades":
+    # Sección para mostrar entidades y wallets
+    st.header("Listado de Entidades y Wallets")
     for entidad, wallets in datos_wallets.items():
-        if st.button(f"{entidad}"):
+        with st.expander(f"📌 {entidad}"):
             for wallet in wallets:
                 st.markdown(f"🔹 **Label**: {wallet['label']}, **Dirección**: `{wallet['direccion']}`")
+
 
