@@ -7,7 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/1AFqXwmHjPonPYgBCnBjWWCPvu-WocoH_
 """
 
-!!pip install solana==0.21.0
 !pip install requests
 
 try:
