@@ -8,9 +8,9 @@ def autenticar_google_sheets():
              "https://www.googleapis.com/auth/drive"]
     
     credentials = Credentials.from_service_account_info(
-    st.secrets["GCP_CREDENTIALS"], scopes=scope)
-client = gspread.authorize(credentials)
-
+        st.secrets["GCP_CREDENTIALS"], scopes=scope)
+    
+    client = gspread.authorize(credentials)  # Esta línea debe estar indentada
     return client
 
 # Función para obtener los datos desde Google Sheets
