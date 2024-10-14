@@ -3,3 +3,4 @@ gspread
 google-auth
 pandas
 solana==0.21.0
+Pillow==9.1.0
