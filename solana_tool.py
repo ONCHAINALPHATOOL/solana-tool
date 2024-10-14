@@ -28,7 +28,7 @@ def agregar_wallet_google_sheets(sheet_id, sheet_name, entidad, label, direccion
 
 # Tu ID de la hoja de Google Sheets (puedes obtenerlo de la URL de tu hoja de cálculo)
 SHEET_ID = "1IixRfnvy9PwuvKsD_40VyaFRhTrRAS7I2CXJbps1AE9"  # Reemplazar con el ID de tu hoja
-SHEET_NAME = "MAIN"  # Cambia el nombre de la hoja si es necesario
+SHEET_NAME = "page1"  # Cambia el nombre de la hoja si es necesario
 
 # Cargar los datos desde Google Sheets al iniciar
 datos_wallets = obtener_datos_hoja(SHEET_ID, SHEET_NAME)
