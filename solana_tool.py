@@ -28,7 +28,7 @@ cargar_datos()
 
 # Encabezado principal de la aplicación
 # Título principal
-st.title("🚀 Gestión de Wallets y Entidades")
+st.title("SOLANA TOOL ONCHAIN ALPHA")
 
 # Sección para agregar una nueva entidad y wallet
 st.header("Agregar Entidad y Wallet")
@@ -42,6 +42,7 @@ if st.button("Agregar Wallet"):
         if nueva_entidad not in entidades_data:
             entidades_data[nueva_entidad] = []
         entidades_data[nueva_entidad].append({"label": nuevo_label, "direccion": nueva_wallet})
+        guardar_datos()
         st.success(f"✅ Wallet agregada a la entidad '{nueva_entidad}'")
     else:
         st.error("❌ Por favor, completa todos los campos")
@@ -58,13 +59,18 @@ for entidad, wallets in entidades_data.items():
 
 # Otra sección para mejorar la gestión de wallets
 st.header("Gestionar Wallets")
-entidad_seleccionada = st.selectbox("Selecciona una Entidad", list(entidades_data.keys()))
+
+# Clave única para la selección de entidades y wallets
+entidad_seleccionada = st.selectbox("Selecciona una Entidad", list(entidades_data.keys()), key="entidad_gestionar")
 
 if entidad_seleccionada:
-    wallet_seleccionada = st.selectbox("Selecciona una Wallet", [wallet['label'] for wallet in entidades_data[entidad_seleccionada]])
-    for wallet in entidades_data[entidad_seleccionada]:
-        if wallet["label"] == wallet_seleccionada:
-            st.write(f"🔑 **Dirección**: `{wallet['direccion']}`")
+    wallet_seleccionada = st.selectbox("Selecciona una Wallet", [wallet['label'] for wallet in entidades_data[entidad_seleccionada]], key="wallet_gestionar")
+    
+    # Mostrar información de la wallet seleccionada
+    if wallet_seleccionada:
+        wallet_info = next((wallet for wallet in entidades_data[entidad_seleccionada] if wallet['label'] == wallet_seleccionada), None)
+        if wallet_info:
+            st.write(f"🔑 **Dirección**: `{wallet_info['direccion']}`")
 
 # Agregar algunas notas finales o instrucciones
 st.markdown("""
@@ -76,14 +82,15 @@ st.markdown("""
 # Sección para gestionar (editar y eliminar) wallets
 st.header("Gestionar Wallets")
 
-# Dropdown para seleccionar una entidad
-entidad_seleccionada = st.selectbox("Selecciona una Entidad", list(entidades_data.keys()))
+# Dropdown para seleccionar una entidad con clave única
+entidad_seleccionada = st.selectbox("Selecciona una Entidad", list(entidades_data.keys()), key="entidad_editar")
 
 if entidad_seleccionada:
-    # Dropdown para seleccionar una wallet dentro de la entidad seleccionada
+    # Dropdown para seleccionar una wallet dentro de la entidad seleccionada, también con clave única
     wallet_seleccionada = st.selectbox(
         "Selecciona una Wallet",
-        [wallet['label'] for wallet in entidades_data[entidad_seleccionada]]
+        [wallet['label'] for wallet in entidades_data[entidad_seleccionada]],
+        key="wallet_editar"
     )
 
     # Cargar datos de la wallet seleccionada
@@ -97,18 +104,18 @@ if entidad_seleccionada:
             st.write(f"Dirección: {wallet_info['direccion']}")
 
             # Inputs para editar la wallet seleccionada
-            nuevo_label = st.text_input("Nuevo Label", value=wallet_info['label'])
-            nueva_direccion = st.text_input("Nueva Dirección", value=wallet_info['direccion'])
+            nuevo_label = st.text_input("Nuevo Label", value=wallet_info['label'], key="nuevo_label")
+            nueva_direccion = st.text_input("Nueva Dirección", value=wallet_info['direccion'], key="nueva_direccion")
 
             # Botón para guardar los cambios
-            if st.button("Guardar Cambios"):
+            if st.button("Guardar Cambios", key="guardar_cambios"):
                 wallet_info['label'] = nuevo_label
                 wallet_info['direccion'] = nueva_direccion
                 guardar_datos()
                 st.success(f"Wallet '{nuevo_label}' actualizada correctamente.")
 
             # Botón para eliminar la wallet
-            if st.button("Eliminar Wallet"):
+            if st.button("Eliminar Wallet", key="eliminar_wallet"):
                 entidades_data[entidad_seleccionada] = [
                     wallet for wallet in entidades_data[entidad_seleccionada] if wallet['label'] != wallet_seleccionada
                 ]
