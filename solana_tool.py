@@ -57,6 +57,9 @@ for entidad, wallets in entidades_data.items():
     for wallet in wallets:
         st.markdown(f"🔹 **Label**: {wallet['label']}, **Dirección**: `{wallet['direccion']}`")
 
+# Separador visual
+st.markdown("---")
+
 # Otra sección para mejorar la gestión de wallets
 st.header("Buscador de Wallets")
 
