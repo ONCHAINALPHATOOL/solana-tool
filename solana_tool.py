@@ -83,7 +83,7 @@ st.markdown("""
 st.markdown("---")
 
 # Sección para gestionar (editar y eliminar) wallets
-st.header("Gestionar Wallets")
+st.header("Modificar Wallets")
 
 # Dropdown para seleccionar una entidad con clave única
 entidad_seleccionada = st.selectbox("Selecciona una Entidad", list(entidades_data.keys()), key="entidad_editar")
