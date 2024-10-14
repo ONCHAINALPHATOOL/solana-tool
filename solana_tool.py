@@ -35,100 +35,107 @@ ARCHIVO_JSON = "/wallets_data.json"
 # Cargar los datos desde Dropbox al iniciar
 datos_wallets = cargar_json_desde_dropbox(ARCHIVO_JSON)
 
-# Encabezado principal de la aplicación
-st.title("SOLANA TOOL ONCHAIN ALPHA")
+# Crear pestañas para organizar las vistas
+opciones = ["Agregar/Búsqueda/Modificar Wallets", "Listado de Entidades"]
+seleccion = st.sidebar.radio("Selecciona una opción", opciones)
 
-# Sección para agregar una nueva entidad y wallet
-st.header("Agregar Entidad y Wallet")
-nueva_entidad = st.text_input("📝 Nombre de la Entidad")
-nueva_wallet = st.text_input("🔑 Dirección de la Wallet")
-nuevo_label = st.text_input("🏷️ Label de la Wallet")
+# Pestaña 1: Agregar Entidad y Wallet, Buscar Wallet y Modificar Wallet
+if seleccion == "Agregar/Búsqueda/Modificar Wallets":
+    # Encabezado principal de la aplicación
+    st.title("SOLANA TOOL ONCHAIN ALPHA")
 
-# Botón para agregar una nueva wallet
-if st.button("Agregar Wallet"):
-    if nueva_entidad and nueva_wallet and nuevo_label:
-        if nueva_entidad in datos_wallets:
-            datos_wallets[nueva_entidad].append({"label": nuevo_label, "direccion": nueva_wallet})
+    # Sección para agregar una nueva entidad y wallet
+    st.header("Agregar Entidad y Wallet")
+    nueva_entidad = st.text_input("📝 Nombre de la Entidad")
+    nueva_wallet = st.text_input("🔑 Dirección de la Wallet")
+    nuevo_label = st.text_input("🏷️ Label de la Wallet")
+
+    # Botón para agregar una nueva wallet
+    if st.button("Agregar Wallet"):
+        if nueva_entidad and nueva_wallet and nuevo_label:
+            if nueva_entidad in datos_wallets:
+                datos_wallets[nueva_entidad].append({"label": nuevo_label, "direccion": nueva_wallet})
+            else:
+                datos_wallets[nueva_entidad] = [{"label": nuevo_label, "direccion": nueva_wallet}]
+            
+            # Guardar los datos actualizados en Dropbox
+            guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
+            st.success(f"✅ Wallet agregada a la entidad '{nueva_entidad}'")
         else:
-            datos_wallets[nueva_entidad] = [{"label": nuevo_label, "direccion": nueva_wallet}]
-        
-        # Guardar los datos actualizados en Dropbox
-        guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
-        st.success(f"✅ Wallet agregada a la entidad '{nueva_entidad}'")
-    else:
-        st.error("❌ Por favor, completa todos los campos")
+            st.error("❌ Por favor, completa todos los campos")
 
-# Separador visual
-st.markdown("---")
+    # Separador visual
+    st.markdown("---")
 
-# Sección para mostrar entidades y wallets
-st.header("Listado de Entidades y Wallets")
-for entidad, wallets in datos_wallets.items():
-    st.markdown(f"📌 **{entidad}**")
-    for wallet in wallets:
-        st.markdown(f"🔹 **Label**: {wallet['label']}, **Dirección**: `{wallet['direccion']}`")
+    # Sección para buscar una wallet por dirección
+    st.header("Buscar Wallet por Dirección")
+    direccion_busqueda = st.text_input("🔎 Introduce la dirección de la wallet")
 
-# Separador visual
-st.markdown("---")
-
-# Sección para buscar una wallet por dirección
-st.header("Buscar Wallet por Dirección")
-direccion_busqueda = st.text_input("🔎 Introduce la dirección de la wallet")
-
-if st.button("Buscar Wallet"):
-    encontrado = False
-    for entidad, wallets in datos_wallets.items():
-        for wallet in wallets:
-            if wallet['direccion'] == direccion_busqueda:
-                st.success(f"✅ Dirección encontrada. Entidad: **{entidad}**, Label: **{wallet['label']}**")
-                encontrado = True
+    if st.button("Buscar Wallet"):
+        encontrado = False
+        for entidad, wallets in datos_wallets.items():
+            for wallet in wallets:
+                if wallet['direccion'] == direccion_busqueda:
+                    st.success(f"✅ Dirección encontrada. Entidad: **{entidad}**, Label: **{wallet['label']}**")
+                    encontrado = True
+                    break
+            if encontrado:
                 break
-        if encontrado:
-            break
-    if not encontrado:
-        st.error("❌ No se encontró ninguna wallet con esa dirección.")
+        if not encontrado:
+            st.error("❌ No se encontró ninguna wallet con esa dirección.")
 
-# Separador visual
-st.markdown("---")
+    # Separador visual
+    st.markdown("---")
 
-# Sección para gestionar (editar y eliminar) wallets
-st.header("Modificar Wallets")
+    # Sección para gestionar (editar y eliminar) wallets
+    st.header("Modificar Wallets")
 
-# Dropdown para seleccionar una entidad con clave única
-entidad_seleccionada = st.selectbox("Selecciona una Entidad", list(datos_wallets.keys()), key="entidad_editar")
+    # Dropdown para seleccionar una entidad con clave única
+    entidad_seleccionada = st.selectbox("Selecciona una Entidad", list(datos_wallets.keys()), key="entidad_editar")
 
-if entidad_seleccionada:
-    # Dropdown para seleccionar una wallet dentro de la entidad seleccionada, también con clave única
-    wallets_filtradas = datos_wallets[entidad_seleccionada]
-    wallet_seleccionada = st.selectbox(
-        "Selecciona una Wallet",
-        [wallet['label'] for wallet in wallets_filtradas],
-        key="wallet_editar"
-    )
-
-    # Cargar datos de la wallet seleccionada
-    if wallet_seleccionada:
-        wallet_info = next(
-            (wallet for wallet in wallets_filtradas if wallet['label'] == wallet_seleccionada), None
+    if entidad_seleccionada:
+        # Dropdown para seleccionar una wallet dentro de la entidad seleccionada, también con clave única
+        wallets_filtradas = datos_wallets[entidad_seleccionada]
+        wallet_seleccionada = st.selectbox(
+            "Selecciona una Wallet",
+            [wallet['label'] for wallet in wallets_filtradas],
+            key="wallet_editar"
         )
 
-        if wallet_info:
-            # Mostrar información de la wallet seleccionada
-            st.write(f"Dirección: {wallet_info['direccion']}")
+        # Cargar datos de la wallet seleccionada
+        if wallet_seleccionada:
+            wallet_info = next(
+                (wallet for wallet in wallets_filtradas if wallet['label'] == wallet_seleccionada), None
+            )
 
-            # Inputs para editar la wallet seleccionada
-            nuevo_label = st.text_input("Nuevo Label", value=wallet_info['label'], key="nuevo_label")
-            nueva_direccion = st.text_input("Nueva Dirección", value=wallet_info['direccion'], key="nueva_direccion")
+            if wallet_info:
+                # Mostrar información de la wallet seleccionada
+                st.write(f"Dirección: {wallet_info['direccion']}")
 
-            # Botón para guardar los cambios (esto requerirá una implementación adicional para modificar en Google Sheets)
-            if st.button("Guardar Cambios", key="guardar_cambios"):
-                wallet_info['label'] = nuevo_label
-                wallet_info['direccion'] = nueva_direccion
-                guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
-                st.success("✅ Cambios guardados correctamente.")
+                # Inputs para editar la wallet seleccionada
+                nuevo_label = st.text_input("Nuevo Label", value=wallet_info['label'], key="nuevo_label")
+                nueva_direccion = st.text_input("Nueva Dirección", value=wallet_info['direccion'], key="nueva_direccion")
 
-            # Botón para eliminar la wallet
-            if st.button("Eliminar Wallet", key="eliminar_wallet"):
-                datos_wallets[entidad_seleccionada].remove(wallet_info)
-                guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
-                st.success("✅ Wallet eliminada correctamente.")
+                # Botón para guardar los cambios
+                if st.button("Guardar Cambios", key="guardar_cambios"):
+                    wallet_info['label'] = nuevo_label
+                    wallet_info['direccion'] = nueva_direccion
+                    guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
+                    st.success("✅ Cambios guardados correctamente.")
+
+                # Botón para eliminar la wallet
+                if st.button("Eliminar Wallet", key="eliminar_wallet"):
+                    datos_wallets[entidad_seleccionada].remove(wallet_info)
+                    guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
+                    st.success("✅ Wallet eliminada correctamente.")
+
+# Pestaña 2: Listado de Entidades y Wallets
+elif seleccion == "Listado de Entidades":
+    st.title("Listado de Entidades y Wallets")
+    
+    # Crear botones por entidad para desplegar información de wallets
+    for entidad, wallets in datos_wallets.items():
+        if st.button(f"Ver wallets de {entidad}"):
+            for wallet in wallets:
+                st.markdown(f"🔹 **Label**: {wallet['label']}, **Dirección**: `{wallet['direccion']}`")
+
