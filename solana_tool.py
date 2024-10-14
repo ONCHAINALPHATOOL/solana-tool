@@ -1,37 +1,34 @@
 import streamlit as st
-import gspread
-from google.oauth2.service_account import Credentials
+import dropbox
+import json
 
-# Autenticación con Google Sheets usando los secretos almacenados en Streamlit
-def autenticar_google_sheets():
-    scope = ["https://www.googleapis.com/auth/spreadsheets", 
-             "https://www.googleapis.com/auth/drive"]
-    
-    credentials = Credentials.from_service_account_info(
-        st.secrets["GCP_CREDENTIALS"], scopes=scope)
-    
-    client = gspread.authorize(credentials)  # Esta línea debe estar indentada
-    return client
+# Función para autenticarse en Dropbox usando el token de acceso
+def conectar_dropbox():
+    dbx = dropbox.Dropbox(st.secrets["dropbox"]["ACCESS_TOKEN"])
+    return dbx
 
-# Función para obtener los datos desde Google Sheets
-def obtener_datos_hoja(sheet_id, sheet_name):
-    client = autenticar_google_sheets()
-    sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
-    data = sheet.get_all_records()
-    return data
+# Función para cargar un archivo JSON desde Dropbox
+def cargar_json_desde_dropbox(ruta_archivo):
+    dbx = conectar_dropbox()
+    try:
+        _, res = dbx.files_download(ruta_archivo)
+        datos = json.loads(res.content)
+    except dropbox.exceptions.ApiError as e:
+        # Si no existe el archivo, devolvemos una lista vacía
+        datos = []
+    return datos
 
-# Función para agregar una nueva wallet en Google Sheets
-def agregar_wallet_google_sheets(sheet_id, sheet_name, entidad, label, direccion):
-    client = autenticar_google_sheets()
-    sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
-    sheet.append_row([entidad, label, direccion])
+# Función para guardar un archivo JSON en Dropbox
+def guardar_json_en_dropbox(ruta_archivo, datos):
+    dbx = conectar_dropbox()
+    contenido_json = json.dumps(datos).encode('utf-8')
+    dbx.files_upload(contenido_json, ruta_archivo, mode=dropbox.files.WriteMode("overwrite"))
 
-# Tu ID de la hoja de Google Sheets (puedes obtenerlo de la URL de tu hoja de cálculo)
-SHEET_ID = "1IixRfnvy9PwuvKsD_40VyaFRhTrRAS7I2CXJbps1AE9"  # Reemplazar con el ID de tu hoja
-SHEET_NAME = "page1"  # Cambia el nombre de la hoja si es necesario
+# Ruta del archivo JSON en Dropbox
+ARCHIVO_JSON = "/wallets_data.json"
 
-# Cargar los datos desde Google Sheets al iniciar
-datos_wallets = obtener_datos_hoja(SHEET_ID, SHEET_NAME)
+# Cargar los datos desde Dropbox al iniciar
+datos_wallets = cargar_json_desde_dropbox(ARCHIVO_JSON)
 
 # Encabezado principal de la aplicación
 st.title("SOLANA TOOL ONCHAIN ALPHA")
@@ -45,7 +42,10 @@ nuevo_label = st.text_input("🏷️ Label de la Wallet")
 # Botón para agregar
 if st.button("Agregar Wallet"):
     if nueva_entidad and nueva_wallet and nuevo_label:
-        agregar_wallet_google_sheets(SHEET_ID, SHEET_NAME, nueva_entidad, nuevo_label, nueva_wallet)
+        # Agregar la nueva wallet a la lista de datos
+        nueva_wallet_info = {"Entidad": nueva_entidad, "Label": nuevo_label, "Dirección": nueva_wallet}
+        datos_wallets.append(nueva_wallet_info)
+        guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
         st.success(f"✅ Wallet agregada a la entidad '{nueva_entidad}'")
     else:
         st.error("❌ Por favor, completa todos los campos")
@@ -55,11 +55,14 @@ st.markdown("---")
 
 # Sección para mostrar entidades y wallets
 st.header("Listado de Entidades y Wallets")
-for fila in datos_wallets:
-    entidad = fila['Entidad']
-    label = fila['Label']
-    direccion = fila['Dirección']
-    st.markdown(f"📌 Entidad: **{entidad}** - 🔹 **Label**: {label}, **Dirección**: `{direccion}`")
+if datos_wallets:
+    for fila in datos_wallets:
+        entidad = fila['Entidad']
+        label = fila['Label']
+        direccion = fila['Dirección']
+        st.markdown(f"📌 Entidad: **{entidad}** - 🔹 **Label**: {label}, **Dirección**: `{direccion}`")
+else:
+    st.write("No hay wallets registradas.")
 
 # Separador visual
 st.markdown("---")
@@ -110,11 +113,17 @@ if entidad_seleccionada:
             nuevo_label = st.text_input("Nuevo Label", value=wallet_info['Label'], key="nuevo_label")
             nueva_direccion = st.text_input("Nueva Dirección", value=wallet_info['Dirección'], key="nueva_direccion")
 
-            # Botón para guardar los cambios (esto requerirá una implementación adicional para modificar en Google Sheets)
+            # Botón para guardar los cambios
             if st.button("Guardar Cambios", key="guardar_cambios"):
-                st.error("Esta funcionalidad no está implementada para Google Sheets.")
+                # Actualizar los datos
+                wallet_info['Label'] = nuevo_label
+                wallet_info['Dirección'] = nueva_direccion
+                guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
+                st.success("Cambios guardados exitosamente")
 
-            # Botón para eliminar la wallet (esto requerirá una implementación adicional para modificar en Google Sheets)
+            # Botón para eliminar la wallet
             if st.button("Eliminar Wallet", key="eliminar_wallet"):
-                st.error("Esta funcionalidad no está implementada para Google Sheets.")
+                datos_wallets.remove(wallet_info)
+                guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
+                st.success("Wallet eliminada exitosamente")
 
