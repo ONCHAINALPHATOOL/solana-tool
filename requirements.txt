@@ -4,3 +4,5 @@ google-auth
 pandas
 solana==0.21.0
 Pillow==9.1.0
+typing-extensions==3.10.0.2
+
