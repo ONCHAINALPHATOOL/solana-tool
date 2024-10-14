@@ -135,7 +135,7 @@ elif seleccion == "Listado de Entidades":
     
     # Crear botones por entidad para desplegar información de wallets
     for entidad, wallets in datos_wallets.items():
-        if st.button(f"Ver wallets de {entidad}"):
+        if st.button(f"{entidad}"):
             for wallet in wallets:
                 st.markdown(f"🔹 **Label**: {wallet['label']}, **Dirección**: `{wallet['direccion']}`")
 
