@@ -60,6 +60,19 @@ st.markdown("""
 """, unsafe_allow_html=True)
 # ------------------------------------------------------------
 
+# ------ Añadir CSS para las secciones ------
+st.markdown("""
+    <style>
+    .section {
+        background-color: #f0f0f0;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+# -------------------------------------------
+
 # Encabezado principal de la aplicación
 st.title("SOLANA TOOL ONCHAIN ALPHA")
 
