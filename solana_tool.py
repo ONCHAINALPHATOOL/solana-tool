@@ -71,7 +71,7 @@ st.markdown("""
 st.title("SOLANA TOOL ONCHAIN ALPHA")
 
 # Radiobuttons para seleccionar la opción
-opcion = st.radio("Selecciona una opción", ("Agregar/Búsqueda/Modificar Wallets", "Listado de Entidades"))
+opcion = st.radio("👇 Selecciona pestaña", ("🛠️ Agregar/Búsqueda/Modificar Wallets", "📚 Listado de Entidades"))
 
 if opcion == "Agregar/Búsqueda/Modificar Wallets":
     
