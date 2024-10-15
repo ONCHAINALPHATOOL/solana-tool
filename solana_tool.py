@@ -35,7 +35,7 @@ ARCHIVO_JSON = "/wallets_data.json"
 # Cargar los datos desde Dropbox al iniciar
 datos_wallets = cargar_json_desde_dropbox(ARCHIVO_JSON)
 
-# ------ AÑADIR CSS PERSONALIZADO PARA LOS BOTONES AQUÍ ------
+# ------ AÑADIR CSS PERSONALIZADO PARA LOS BOTONES Y SECCIONES ------
 st.markdown("""
     <style>
     .option {
@@ -74,7 +74,9 @@ st.title("SOLANA TOOL ONCHAIN ALPHA")
 opcion = st.radio("Selecciona una opción", ("Agregar/Búsqueda/Modificar Wallets", "Listado de Entidades"))
 
 if opcion == "Agregar/Búsqueda/Modificar Wallets":
+    
     # Sección para agregar una nueva entidad y wallet
+    st.markdown('<div class="section">', unsafe_allow_html=True)  # Inicia la sección
     st.header("Agregar Entidad y Wallet")
     nueva_entidad = st.text_input("📝 Nombre de la Entidad")
     nueva_wallet = st.text_input("🔑 Dirección de la Wallet")
@@ -93,8 +95,10 @@ if opcion == "Agregar/Búsqueda/Modificar Wallets":
             st.success(f"✅ Wallet agregada a la entidad '{nueva_entidad}'")
         else:
             st.error("❌ Por favor, completa todos los campos")
+    st.markdown('</div>', unsafe_allow_html=True)  # Termina la sección
 
     # Sección para buscar una wallet por dirección
+    st.markdown('<div class="section">', unsafe_allow_html=True)  # Inicia la sección
     st.header("Buscar Wallet por Dirección")
     direccion_busqueda = st.text_input("🔎 Introduce la dirección de la wallet")
 
@@ -110,8 +114,10 @@ if opcion == "Agregar/Búsqueda/Modificar Wallets":
                 break
         if not encontrado:
             st.error("❌ No se encontró ninguna wallet con esa dirección.")
+    st.markdown('</div>', unsafe_allow_html=True)  # Termina la sección
 
     # Sección para gestionar (editar y eliminar) wallets
+    st.markdown('<div class="section">', unsafe_allow_html=True)  # Inicia la sección
     st.header("Modificar Wallets")
     
     # Dropdown para seleccionar una entidad
@@ -152,6 +158,7 @@ if opcion == "Agregar/Búsqueda/Modificar Wallets":
                     datos_wallets[entidad_seleccionada].remove(wallet_info)
                     guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
                     st.success("✅ Wallet eliminada correctamente.")
+    st.markdown('</div>', unsafe_allow_html=True)  # Termina la sección
 
 elif opcion == "Listado de Entidades":
     # Sección para mostrar entidades y wallets
@@ -160,5 +167,3 @@ elif opcion == "Listado de Entidades":
         with st.expander(f"📌 {entidad}"):
             for wallet in wallets:
                 st.markdown(f"🔹 **Label**: {wallet['label']}, **Dirección**: `{wallet['direccion']}`")
-
-
