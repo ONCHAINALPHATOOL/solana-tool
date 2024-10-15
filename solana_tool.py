@@ -18,7 +18,7 @@ def cargar_json_desde_dropbox(ruta_archivo):
         # Si no existe el archivo, se inicializan los datos
         st.warning("No se encontró el archivo en Dropbox. Inicializando datos por defecto.")
         datos = {
-            "Drae": [{"label": "120K", "direccion": "6N9CDZ7sNRYQ7BWDJX3ibL3359rVXN9ywvaEebQqEo8d"}],
+            "Drae": [{"label": "120K", "direccion": "6N9CDZ7sNRYQ7BWDJX3iLbL3359rVXN9yvwaEebQqEo8d"}],
             "Pedro": [{"label": "christ?", "direccion": "DhxbZcn8oCgafGHSg1WX1bMhv5txGRraVMmR6G6RVnck"}]
         }
     return datos
@@ -59,9 +59,14 @@ st.markdown("""
 
     .section {
         background-color: #f0f0f0;
-        padding: 2px;
-        border-radius: 2px;
+        padding: 20px;
+        border-radius: 10px;
         margin-bottom: 20px;
+    }
+
+    iframe {
+        border: 1px solid #ddd;
+        border-radius: 8px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -167,3 +172,10 @@ elif opcion == "📚 Listado de Entidades":
         with st.expander(f"📌 {entidad}"):
             for wallet in wallets:
                 st.markdown(f"🔹 **Label**: {wallet['label']}, **Dirección**: `{wallet['direccion']}`")
+                
+                # Enlace para ver las transacciones en SolanaTracker
+                url_solanatracker = f"https://www.solanatracker.io/wallet/{wallet['direccion']}"
+                
+                if st.button(f"Ver transacciones de {wallet['label']}"):
+                    st.markdown(f'<iframe src="{url_solanatracker}" width="800" height="600"></iframe>', unsafe_allow_html=True)
+
