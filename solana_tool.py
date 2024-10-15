@@ -18,7 +18,7 @@ def cargar_json_desde_dropbox(ruta_archivo):
         # Si no existe el archivo, se inicializan los datos
         st.warning("No se encontró el archivo en Dropbox. Inicializando datos por defecto.")
         datos = {
-            "Drae": [{"label": "120K", "direccion": "6N9CDZ7sNRYQ7BWDJX3iLbL3359rVXN9yvwaEebQqEo8d"}],
+            "Drae": [{"label": "120K", "direccion": "6N9CDZ7sNRYQ7BWDJX3ibL3359rVXN9ywvaEebQqEo8d"}],
             "Pedro": [{"label": "christ?", "direccion": "DhxbZcn8oCgafGHSg1WX1bMhv5txGRraVMmR6G6RVnck"}]
         }
     return datos
