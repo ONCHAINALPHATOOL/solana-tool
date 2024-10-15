@@ -171,5 +171,5 @@ elif opcion == "📚 Listado de Entidades":
                 # Enlace para ver las transacciones en SolanaTracker
                 url_solanatracker = f"https://www.solanatracker.io/wallet/{wallet['direccion']}"
                 
-                if st.button(f"Ver transacciones de {wallet['label']}"):
+                if st.button(f"Transacciones de {wallet['label']}"):
                     st.markdown(f'<a href="{url_solanatracker}" target="_blank">Abrir en SolanaTracker</a>', unsafe_allow_html=True)
