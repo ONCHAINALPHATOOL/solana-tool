@@ -73,7 +73,7 @@ st.title("SOLANA TOOL ONCHAIN ALPHA")
 # Radiobuttons para seleccionar la opción
 opcion = st.radio("👇 Selecciona pestaña", ("🛠️ Agregar/Búsqueda/Modificar Wallets", "📚 Listado de Entidades"))
 
-if opcion == "Agregar/Búsqueda/Modificar Wallets":
+if opcion == "🛠️ Agregar/Búsqueda/Modificar Wallets":
     
     # Sección para agregar una nueva entidad y wallet
     st.markdown('<div class="section">', unsafe_allow_html=True)  # Inicia la sección
@@ -160,7 +160,7 @@ if opcion == "Agregar/Búsqueda/Modificar Wallets":
                     st.success("✅ Wallet eliminada correctamente.")
     st.markdown('</div>', unsafe_allow_html=True)  # Termina la sección
 
-elif opcion == "Listado de Entidades":
+elif opcion == "📚 Listado de Entidades":
     # Sección para mostrar entidades y wallets
     st.header("Listado de Entidades y Wallets")
     for entidad, wallets in datos_wallets.items():
