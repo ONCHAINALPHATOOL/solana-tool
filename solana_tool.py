@@ -63,11 +63,6 @@ st.markdown("""
         border-radius: 2px;
         margin-bottom: 20px;
     }
-
-    iframe {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-    }
     </style>
 """, unsafe_allow_html=True)
 # ------------------------------------------------------------
@@ -177,5 +172,4 @@ elif opcion == "📚 Listado de Entidades":
                 url_solanatracker = f"https://www.solanatracker.io/wallet/{wallet['direccion']}"
                 
                 if st.button(f"Ver transacciones de {wallet['label']}"):
-                    st.markdown(f'<iframe src="{url_solanatracker}" width="800" height="600"></iframe>', unsafe_allow_html=True)
-
+                    st.markdown(f'<a href="{url_solanatracker}" target="_blank">Abrir en SolanaTracker</a>', unsafe_allow_html=True)
