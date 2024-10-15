@@ -59,8 +59,8 @@ st.markdown("""
 
     .section {
         background-color: #f0f0f0;
-        padding: 20px;
-        border-radius: 10px;
+        padding: 2px;
+        border-radius: 2px;
         margin-bottom: 20px;
     }
     </style>
