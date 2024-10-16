@@ -39,11 +39,15 @@ def cargar_json_desde_backblaze(ruta_archivo):
 
 # Función para guardar un archivo JSON en Backblaze
 def guardar_json_en_backblaze(ruta_archivo, datos):
-    b2_api = conectar_backblaze()
-    bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
-    contenido_json = json.dumps(datos).encode('utf-8')
-    bucket.upload_bytes(contenido_json, ruta_archivo)
-    st.success(f"Archivo '{ruta_archivo}' guardado/actualizado en Backblaze.")
+    try:
+        b2_api = conectar_backblaze()
+        bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
+        contenido_json = json.dumps(datos).encode('utf-8')
+        bucket.upload_bytes(contenido_json, ruta_archivo)
+        st.success(f"Archivo '{ruta_archivo}' guardado/actualizado en Backblaze.")
+    except Exception as e:
+        st.error(f"Error al guardar el archivo en Backblaze: {e}")
+
 
 # Ruta del archivo JSON en Backblaze
 ARCHIVO_JSON = "wallets_data.json"
