@@ -19,16 +19,13 @@ def cargar_json_desde_backblaze(ruta_archivo):
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
     
     try:
-        # Crear un objeto para descargar el archivo en memoria
-        download_dest = DownloadDestBytes()
+        # Descargar el archivo y guardarlo en memoria
+        destino = DownloadDestBytes()
+        bucket.download_file_by_name(ruta_archivo, destino)
         
-        # Descargar el archivo y guardarlo en el objeto de memoria
-        bucket.download_file_by_name(ruta_archivo, download_dest)
-        
-        # Obtener el contenido del archivo descargado
-        contenido_json = download_dest.get_bytes()
-        datos = json.loads(contenido_json.decode('utf-8'))
-        
+        # Leer el contenido del archivo descargado
+        contenido_json = destino.get_bytes().decode('utf-8')
+        datos = json.loads(contenido_json)
         st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
         
     except Exception as e:
@@ -40,7 +37,6 @@ def cargar_json_desde_backblaze(ruta_archivo):
             "Pedro": [{"label": "christ?", "direccion": "DhxbZcn8oCgafGHSg1WX1bMhv5txGRraVMmR6G6RVnck"}]
         }
     return datos
-
 
 # Función para guardar un archivo JSON en Backblaze
 def guardar_json_en_backblaze(ruta_archivo, datos):
@@ -54,6 +50,7 @@ ARCHIVO_JSON = "wallets_data.json"
 
 # Cargar los datos desde Backblaze al iniciar
 datos_wallets = cargar_json_desde_backblaze(ARCHIVO_JSON)
+
 
 # ------ AÑADIR CSS PERSONALIZADO PARA LOS BOTONES Y SECCIONES ------
 st.markdown("""
