@@ -1,39 +1,46 @@
 import streamlit as st
-import dropbox
+from b2sdk.v1 import InMemoryAccountInfo, B2Api, DownloadDestBytes
 import json
 import os
 
-# Función para autenticar con Dropbox usando el token almacenado en los secretos
-def conectar_dropbox():
-    dbx = dropbox.Dropbox(st.secrets["dropbox"]["ACCESS_TOKEN"])
-    return dbx
+# Función para autenticar con Backblaze usando los secretos de Streamlit
+def conectar_backblaze():
+    info = InMemoryAccountInfo()
+    b2_api = B2Api(info)
+    b2_api.authorize_account(
+        "production",
+        st.secrets["backblaze"]["KEY_ID"],
+        st.secrets["backblaze"]["APPLICATION_KEY"]
+    )
+    return b2_api
 
-# Función para cargar un archivo JSON desde Dropbox (si existe)
-def cargar_json_desde_dropbox(ruta_archivo):
-    dbx = conectar_dropbox()
+# Función para cargar un archivo JSON desde Backblaze (si existe)
+def cargar_json_desde_backblaze(ruta_archivo):
+    b2_api = conectar_backblaze()
+    bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
     try:
-        _, res = dbx.files_download(ruta_archivo)
-        datos = json.loads(res.content)
-    except dropbox.exceptions.ApiError as e:
-        # Si no existe el archivo, se inicializan los datos
-        st.warning("No se encontró el archivo en Dropbox. Inicializando datos por defecto.")
+        file_info, file_version = bucket.download_file_by_name(ruta_archivo, DownloadDestBytes())
+        datos = json.loads(file_version.bytes_)
+    except Exception as e:
+        st.warning("No se encontró el archivo en Backblaze. Inicializando datos por defecto.")
         datos = {
             "Drae": [{"label": "120K", "direccion": "6N9CDZ7sNRYQ7BWDJX3ibL3359rVXN9ywvaEebQqEo8d"}],
             "Pedro": [{"label": "christ?", "direccion": "DhxbZcn8oCgafGHSg1WX1bMhv5txGRraVMmR6G6RVnck"}]
         }
     return datos
 
-# Función para guardar un archivo JSON en Dropbox
-def guardar_json_en_dropbox(ruta_archivo, datos):
-    dbx = conectar_dropbox()
+# Función para guardar un archivo JSON en Backblaze
+def guardar_json_en_backblaze(ruta_archivo, datos):
+    b2_api = conectar_backblaze()
+    bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
     contenido_json = json.dumps(datos).encode('utf-8')
-    dbx.files_upload(contenido_json, ruta_archivo, mode=dropbox.files.WriteMode("overwrite"))
+    bucket.upload_bytes(contenido_json, ruta_archivo)
 
-# Ruta del archivo JSON en Dropbox
-ARCHIVO_JSON = "/wallets_data.json"
+# Ruta del archivo JSON en Backblaze
+ARCHIVO_JSON = "wallets_data.json"
 
-# Cargar los datos desde Dropbox al iniciar
-datos_wallets = cargar_json_desde_dropbox(ARCHIVO_JSON)
+# Cargar los datos desde Backblaze al iniciar
+datos_wallets = cargar_json_desde_backblaze(ARCHIVO_JSON)
 
 # ------ AÑADIR CSS PERSONALIZADO PARA LOS BOTONES Y SECCIONES ------
 st.markdown("""
@@ -90,8 +97,8 @@ if opcion == "🛠️ Agregar/Búsqueda/Modificar Wallets":
             else:
                 datos_wallets[nueva_entidad] = [{"label": nuevo_label, "direccion": nueva_wallet}]
             
-            # Guardar los datos actualizados en Dropbox
-            guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
+            # Guardar los datos actualizados en Backblaze
+            guardar_json_en_backblaze(ARCHIVO_JSON, datos_wallets)
             st.success(f"✅ Wallet agregada a la entidad '{nueva_entidad}'")
         else:
             st.error("❌ Por favor, completa todos los campos")
@@ -150,13 +157,13 @@ if opcion == "🛠️ Agregar/Búsqueda/Modificar Wallets":
                 if st.button("Guardar Cambios", key="guardar_cambios"):
                     wallet_info['label'] = nuevo_label
                     wallet_info['direccion'] = nueva_direccion
-                    guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
+                    guardar_json_en_backblaze(ARCHIVO_JSON, datos_wallets)
                     st.success("✅ Cambios guardados correctamente.")
 
                 # Botón para eliminar la wallet
                 if st.button("Eliminar Wallet", key="eliminar_wallet"):
                     datos_wallets[entidad_seleccionada].remove(wallet_info)
-                    guardar_json_en_dropbox(ARCHIVO_JSON, datos_wallets)
+                    guardar_json_en_backblaze(ARCHIVO_JSON, datos_wallets)
                     st.success("✅ Wallet eliminada correctamente.")
     st.markdown('</div>', unsafe_allow_html=True)  # Termina la sección
 
