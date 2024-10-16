@@ -1,5 +1,5 @@
 import streamlit as st
-from b2sdk.v1 import InMemoryAccountInfo, B2Api, DownloadDestBytes
+from b2sdk.v1 import InMemoryAccountInfo, B2Api, DownloadDestBytes  # Asegúrate de tener esta importación
 import json
 
 # Función para autenticar con Backblaze usando los secretos de Streamlit
@@ -17,22 +17,22 @@ def conectar_backblaze():
 def cargar_json_desde_backblaze(ruta_archivo):
     b2_api = conectar_backblaze()
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
-    
+
     try:
-        # Descargar el archivo y guardarlo en memoria usando DownloadDestBytes
-        destino = DownloadDestBytes()  # Crear el destino
-        bucket.download_file_by_name(ruta_archivo, destino)  # Proveer el destino explícito
-        
-        # Obtener los bytes descargados
-        contenido_json = destino.get_bytes()
-        datos = json.loads(contenido_json.decode('utf-8'))  # Convertir de bytes a string y luego a JSON
+        # Usamos DownloadDestBytes para descargar el archivo en la memoria
+        destino = DownloadDestBytes()  # Creamos el objeto que actuará como destino en memoria
+        bucket.download_file_by_name(ruta_archivo, destino)  # Descargamos el archivo en memoria
+
+        # Obtenemos el contenido del archivo descargado
+        contenido_json = destino.get_bytes()  # Esto devuelve el contenido en bytes
+        datos = json.loads(contenido_json.decode('utf-8'))  # Convertimos los bytes a JSON
         st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
         return datos
 
     except Exception as e:
         st.error(f"Error al cargar el archivo desde Backblaze: {e}")
+        st.warning("No se cargaron los datos desde Backblaze.")
         return None
-
 
 # Función para guardar un archivo JSON en Backblaze
 def guardar_json_en_backblaze(ruta_archivo, datos):
@@ -54,8 +54,9 @@ datos_wallets = cargar_json_desde_backblaze(ARCHIVO_JSON)
 if datos_wallets is None:
     st.error("No se cargaron los datos desde Backblaze.")
 else:
-    # Código restante para la aplicación aquí
+    # Aquí puedes agregar el código para manejar los datos cargados correctamente
     st.write("Datos cargados correctamente:", datos_wallets)
+
 
 
     
