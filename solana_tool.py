@@ -1,8 +1,8 @@
-import streamlit as st
-from b2sdk.v1 import InMemoryAccountInfo, B2Api, DownloadDestBytes  # Asegúrate de tener esta importación
+from b2sdk.v1 import InMemoryAccountInfo, B2Api, DownloadDestBytes
 import json
+import streamlit as st
 
-# Función para autenticar con Backblaze usando los secretos de Streamlit
+# Function to connect to Backblaze
 def conectar_backblaze():
     info = InMemoryAccountInfo()
     b2_api = B2Api(info)
@@ -13,26 +13,28 @@ def conectar_backblaze():
     )
     return b2_api
 
-# Función para cargar un archivo JSON desde Backblaze
+# Function to load a JSON file from Backblaze
 def cargar_json_desde_backblaze(ruta_archivo):
     b2_api = conectar_backblaze()
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
 
     try:
-        # Usamos DownloadDestBytes para descargar el archivo en la memoria
-        destino = DownloadDestBytes()  # Creamos el objeto que actuará como destino en memoria
-        bucket.download_file_by_name(ruta_archivo, destino)  # Descargamos el archivo en memoria
+        # Create the destination in memory
+        destino = DownloadDestBytes()
+        
+        # Download the file and pass the destination
+        bucket.download_file_by_name(ruta_archivo, destino)
 
-        # Obtenemos el contenido del archivo descargado
-        contenido_json = destino.get_bytes()  # Esto devuelve el contenido en bytes
-        datos = json.loads(contenido_json.decode('utf-8'))  # Convertimos los bytes a JSON
-        st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
+        # Read the contents and parse the JSON
+        contenido_json = destino.get_bytes()
+        datos = json.loads(contenido_json.decode('utf-8'))
+        st.success(f"Archivo '{ruta_archivo}' cargado correctamente.")
         return datos
 
     except Exception as e:
         st.error(f"Error al cargar el archivo desde Backblaze: {e}")
-        st.warning("No se cargaron los datos desde Backblaze.")
         return None
+
 
 # Función para guardar un archivo JSON en Backblaze
 def guardar_json_en_backblaze(ruta_archivo, datos):
