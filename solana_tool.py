@@ -14,25 +14,27 @@ def conectar_backblaze():
     )
     return b2_api
 
+# Función para cargar un archivo JSON desde Backblaze
 def cargar_json_desde_backblaze(ruta_archivo):
     b2_api = conectar_backblaze()
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
-    
+
     try:
-        # Descargar el archivo y leerlo directamente como un stream
+        # Intentar descargar el archivo desde Backblaze
         file_info, file_stream = bucket.download_file_by_name(ruta_archivo)
         contenido_json = file_stream.read()  # Leer el contenido completo del archivo
         datos = json.loads(contenido_json.decode('utf-8'))  # Convertir de bytes a string y luego a JSON
         st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
-        
     except Exception as e:
+        # Si hay un error (archivo no existe, por ejemplo), crear el archivo con datos predeterminados
         st.error(f"Error al cargar el archivo desde Backblaze: {e}")
-        # Si no existe el archivo, se inicializan los datos por defecto
         st.warning("No se encontró el archivo en Backblaze. Inicializando datos por defecto.")
         datos = {
             "Drae": [{"label": "120K", "direccion": "6N9CDZ7sNRYQ7BWDJX3ibL3359rVXN9ywvaEebQqEo8d"}],
             "Pedro": [{"label": "christ?", "direccion": "DhxbZcn8oCgafGHSg1WX1bMhv5txGRraVMmR6G6RVnck"}]
         }
+        guardar_json_en_backblaze(ruta_archivo, datos)  # Crear el archivo automáticamente
+        st.success(f"Archivo '{ruta_archivo}' creado exitosamente en Backblaze.")
     return datos
 
 # Función para guardar un archivo JSON en Backblaze
@@ -41,14 +43,13 @@ def guardar_json_en_backblaze(ruta_archivo, datos):
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
     contenido_json = json.dumps(datos).encode('utf-8')
     bucket.upload_bytes(contenido_json, ruta_archivo)
+    st.success(f"Archivo '{ruta_archivo}' guardado/actualizado en Backblaze.")
 
 # Ruta del archivo JSON en Backblaze
 ARCHIVO_JSON = "wallets_data.json"
 
 # Cargar los datos desde Backblaze al iniciar
 datos_wallets = cargar_json_desde_backblaze(ARCHIVO_JSON)
-
-
 
 # ------ AÑADIR CSS PERSONALIZADO PARA LOS BOTONES Y SECCIONES ------
 st.markdown("""
