@@ -19,12 +19,16 @@ def cargar_json_desde_backblaze(ruta_archivo):
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
     
     try:
-        # Descargar el archivo y guardarlo en memoria
-        downloaded_file = bucket.download_file_by_name(ruta_archivo)
+        # Crear un objeto para descargar el archivo en memoria
+        download_dest = DownloadDestBytes()
         
-        # Leer el contenido del archivo en memoria y cargarlo como JSON
-        contenido_json = downloaded_file.content
-        datos = json.loads(contenido_json)
+        # Descargar el archivo y guardarlo en el objeto de memoria
+        bucket.download_file_by_name(ruta_archivo, download_dest)
+        
+        # Obtener el contenido del archivo descargado
+        contenido_json = download_dest.get_bytes()
+        datos = json.loads(contenido_json.decode('utf-8'))
+        
         st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
         
     except Exception as e:
@@ -36,6 +40,7 @@ def cargar_json_desde_backblaze(ruta_archivo):
             "Pedro": [{"label": "christ?", "direccion": "DhxbZcn8oCgafGHSg1WX1bMhv5txGRraVMmR6G6RVnck"}]
         }
     return datos
+
 
 # Función para guardar un archivo JSON en Backblaze
 def guardar_json_en_backblaze(ruta_archivo, datos):
