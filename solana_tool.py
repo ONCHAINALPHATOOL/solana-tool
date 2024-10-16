@@ -1,5 +1,5 @@
 import streamlit as st
-from b2sdk.v1 import InMemoryAccountInfo, B2Api
+from b2sdk.v1 import InMemoryAccountInfo, B2Api, DownloadDestBytes  # Importamos DownloadDestBytes correctamente
 import json
 
 # Función para autenticar con Backblaze usando los secretos de Streamlit
@@ -13,16 +13,19 @@ def conectar_backblaze():
     )
     return b2_api
 
-# Función para cargar un archivo JSON desde Backblaze sin inicializar datos por defecto
+# Función para cargar un archivo JSON desde Backblaze
 def cargar_json_desde_backblaze(ruta_archivo):
     b2_api = conectar_backblaze()
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
 
     try:
-        # Descargar el archivo desde Backblaze como un objeto FileVersion y obtener el contenido
-        file_info, file_stream = bucket.download_file_by_name(ruta_archivo)
-        contenido_json = file_stream.read().decode('utf-8')  # Leer el archivo y convertirlo a string
-        datos = json.loads(contenido_json)  # Convertir de string a JSON
+        # Descargar el archivo y guardarlo en un objeto DownloadDestBytes
+        destino = DownloadDestBytes()
+        bucket.download_file_by_name(ruta_archivo, destino)  # Añadimos el destino explícito
+        
+        # Obtener los datos del archivo descargado
+        contenido_json = destino.get_bytes()  # Obtener los bytes descargados
+        datos = json.loads(contenido_json.decode('utf-8'))  # Convertir de bytes a string y luego a JSON
         st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
         return datos
         
@@ -187,4 +190,3 @@ if datos_wallets is not None:
                     
                     if st.button(f"Transacciones de {wallet['label']}"):
                         st.markdown(f'<a href="{url_solanatracker}" target="_blank">Abrir en SolanaTracker</a>', unsafe_allow_html=True)
-
