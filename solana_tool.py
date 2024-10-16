@@ -17,13 +17,12 @@ def conectar_backblaze():
 def cargar_json_desde_backblaze(ruta_archivo):
     b2_api = conectar_backblaze()
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
-    
+
     try:
-        # Descargar el archivo directamente sin usar DownloadDestBytes
-        downloaded_file = bucket.download_file_by_name(ruta_archivo).content
-        
-        # Convertir de bytes a string y luego a JSON
-        datos = json.loads(downloaded_file.decode('utf-8'))
+        # Descargar el archivo desde Backblaze como un objeto FileVersion y luego obtener el contenido
+        file_info, file_stream = bucket.download_file_by_name(ruta_archivo)
+        contenido_json = file_stream.read().decode('utf-8')  # Leer el archivo y convertirlo a string
+        datos = json.loads(contenido_json)  # Convertir de string a JSON
         st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
         
     except Exception as e:
