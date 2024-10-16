@@ -1,5 +1,6 @@
 import streamlit as st
 from b2sdk.v1 import InMemoryAccountInfo, B2Api
+from b2sdk.file_version import DownloadDestBytes  # Importación correcta
 import json
 import os
 
@@ -22,10 +23,10 @@ def cargar_json_desde_backblaze(ruta_archivo):
     try:
         # Descargar el archivo y guardarlo en memoria
         destino = DownloadDestBytes()  # Se especifica explícitamente el destino
-        bucket.download_file_by_name(ruta_archivo, destino)  # Añadimos el destino explícito
+        bucket.download_file_by_name(ruta_archivo, destino)  # Descargar el archivo a destino
         
         # Obtener los datos del archivo descargado
-        contenido_json = destino.get_bytes()  # Esto ahora debería funcionar correctamente
+        contenido_json = destino.get_bytes()  # Obtener los bytes del archivo descargado
         datos = json.loads(contenido_json.decode('utf-8'))  # Convertir de bytes a string y luego a JSON
         st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
         
@@ -39,18 +40,16 @@ def cargar_json_desde_backblaze(ruta_archivo):
         }
     return datos
 
-
 # Función para guardar un archivo JSON en Backblaze
 def guardar_json_en_backblaze(ruta_archivo, datos):
     try:
         b2_api = conectar_backblaze()
         bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
-        contenido_json = json.dumps(datos).encode('utf-8')
-        bucket.upload_bytes(contenido_json, ruta_archivo)
+        contenido_json = json.dumps(datos).encode('utf-8')  # Convertir los datos a JSON y luego a bytes
+        bucket.upload_bytes(contenido_json, ruta_archivo)  # Subir el archivo a Backblaze
         st.success(f"Archivo '{ruta_archivo}' guardado/actualizado en Backblaze.")
     except Exception as e:
         st.error(f"Error al guardar el archivo en Backblaze: {e}")
-
 
 # Ruta del archivo JSON en Backblaze
 ARCHIVO_JSON = "wallets_data.json"
@@ -88,7 +87,6 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
-# ------------------------------------------------------------
 
 # Encabezado principal de la aplicación
 st.title("SOLANA TOOL ONCHAIN ALPHA")
