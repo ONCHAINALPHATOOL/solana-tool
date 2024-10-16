@@ -1,7 +1,6 @@
 import streamlit as st
-from b2sdk.v1 import InMemoryAccountInfo, B2Api
+from b2sdk.v1 import InMemoryAccountInfo, B2Api, DownloadDestBytes
 import json
-from io import BytesIO
 
 # Función para autenticar con Backblaze usando los secretos de Streamlit
 def conectar_backblaze():
@@ -18,21 +17,22 @@ def conectar_backblaze():
 def cargar_json_desde_backblaze(ruta_archivo):
     b2_api = conectar_backblaze()
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
-
+    
     try:
-        # Descargar el archivo y guardarlo directamente en un flujo de memoria
-        file_version_info, stream = bucket.download_file_by_name(ruta_archivo)
-
-        # Leer el archivo descargado
-        contenido_json = BytesIO(stream.read())
-        datos = json.loads(contenido_json.getvalue().decode('utf-8'))  # Convertir de bytes a string y luego a JSON
+        # Descargar el archivo y guardarlo en memoria usando DownloadDestBytes
+        destino = DownloadDestBytes()  # Crear el destino
+        bucket.download_file_by_name(ruta_archivo, destino)  # Proveer el destino explícito
+        
+        # Obtener los bytes descargados
+        contenido_json = destino.get_bytes()
+        datos = json.loads(contenido_json.decode('utf-8'))  # Convertir de bytes a string y luego a JSON
         st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
         return datos
 
     except Exception as e:
         st.error(f"Error al cargar el archivo desde Backblaze: {e}")
-        st.warning("No se cargaron los datos desde Backblaze.")
-        return None  # Devolver None en lugar de datos por defecto para poder manejar errores
+        return None
+
 
 # Función para guardar un archivo JSON en Backblaze
 def guardar_json_en_backblaze(ruta_archivo, datos):
