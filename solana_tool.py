@@ -91,9 +91,6 @@ st.title("SOLANA TOOL ONCHAIN ALPHA")
 # Radiobuttons para seleccionar la opción
 opcion = st.radio("👇 Selecciona pestaña", ("🛠️ Agregar/Búsqueda/Modificar Wallets", "📚 Listado de Entidades"))
 
-# Al cargar la base de datos, mostramos solo un mensaje de éxito.
-st.success("Base de datos cargada con éxito.")  # Mensaje de éxito sin mostrar los datos crudos.
-
 if opcion == "🛠️ Agregar/Búsqueda/Modificar Wallets":
     # Sección para agregar una nueva entidad y wallet
     st.markdown('<div class="section">', unsafe_allow_html=True)  # Inicia la sección
