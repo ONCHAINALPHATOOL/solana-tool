@@ -1,6 +1,7 @@
 import streamlit as st
-from b2sdk.v1 import InMemoryAccountInfo, B2Api, DownloadDestBytes  # Importamos DownloadDestBytes correctamente
+from b2sdk.v1 import InMemoryAccountInfo, B2Api
 import json
+import io
 
 # Función para autenticar con Backblaze usando los secretos de Streamlit
 def conectar_backblaze():
@@ -17,21 +18,21 @@ def conectar_backblaze():
 def cargar_json_desde_backblaze(ruta_archivo):
     b2_api = conectar_backblaze()
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
-
+    
     try:
-        # Descargar el archivo y guardarlo en un objeto DownloadDestBytes
-        destino = DownloadDestBytes()
-        bucket.download_file_by_name(ruta_archivo, destino)  # Añadimos el destino explícito
+        # Descargar el archivo como un stream de bytes
+        file_info, file_stream = bucket.download_file_by_name(ruta_archivo)
         
-        # Obtener los datos del archivo descargado
-        contenido_json = destino.get_bytes()  # Obtener los bytes descargados
+        # Leer el contenido del archivo descargado
+        contenido_json = file_stream.read()
         datos = json.loads(contenido_json.decode('utf-8'))  # Convertir de bytes a string y luego a JSON
+        
         st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
         return datos
         
     except Exception as e:
         st.error(f"Error al cargar el archivo desde Backblaze: {e}")
-        return None  # No cargar nada si hay error
+        return None  # No cargará nada si hay error
 
 # Función para guardar un archivo JSON en Backblaze
 def guardar_json_en_backblaze(ruta_archivo, datos):
@@ -50,8 +51,12 @@ ARCHIVO_JSON = "wallets_data.json"
 # Cargar los datos desde Backblaze al iniciar
 datos_wallets = cargar_json_desde_backblaze(ARCHIVO_JSON)
 
-# Solo continuar si los datos se han cargado correctamente
-if datos_wallets is not None:
+if datos_wallets is None:
+    st.warning("No se cargaron los datos desde Backblaze.")
+else:
+    st.write("Datos cargados correctamente desde Backblaze.")
+
+    
     # ------ AÑADIR CSS PERSONALIZADO PARA LOS BOTONES Y SECCIONES ------
     st.markdown("""
         <style>
