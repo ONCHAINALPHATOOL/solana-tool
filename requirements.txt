@@ -8,3 +8,4 @@ Pillow==9.1.0
 typing-extensions>=4.0.0
 oauth2client
 b2sdk
+boto3
