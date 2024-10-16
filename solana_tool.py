@@ -95,6 +95,8 @@ st.title("SOLANA TOOL ONCHAIN ALPHA")
 opcion = st.radio("👇 Selecciona pestaña", ("🛠️ Agregar/Búsqueda/Modificar Wallets", "📚 Listado de Entidades"))
 
 if opcion == "🛠️ Agregar/Búsqueda/Modificar Wallets":
+    # Mostrar los datos en la app solo en esta pestaña
+    st.write("Datos cargados:", datos_wallets)
     
     # Sección para agregar una nueva entidad y wallet
     st.markdown('<div class="section">', unsafe_allow_html=True)  # Inicia la sección
