@@ -1,8 +1,6 @@
 import streamlit as st
 from b2sdk.v1 import InMemoryAccountInfo, B2Api
-from b2sdk.file_version import DownloadDestBytes  # Importación correcta
 import json
-import os
 
 # Función para autenticar con Backblaze usando los secretos de Streamlit
 def conectar_backblaze():
@@ -21,13 +19,11 @@ def cargar_json_desde_backblaze(ruta_archivo):
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
     
     try:
-        # Descargar el archivo y guardarlo en memoria
-        destino = DownloadDestBytes()  # Se especifica explícitamente el destino
-        bucket.download_file_by_name(ruta_archivo, destino)  # Descargar el archivo a destino
+        # Descargar el archivo directamente sin usar DownloadDestBytes
+        downloaded_file = bucket.download_file_by_name(ruta_archivo).content
         
-        # Obtener los datos del archivo descargado
-        contenido_json = destino.get_bytes()  # Obtener los bytes del archivo descargado
-        datos = json.loads(contenido_json.decode('utf-8'))  # Convertir de bytes a string y luego a JSON
+        # Convertir de bytes a string y luego a JSON
+        datos = json.loads(downloaded_file.decode('utf-8'))
         st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
         
     except Exception as e:
@@ -45,8 +41,8 @@ def guardar_json_en_backblaze(ruta_archivo, datos):
     try:
         b2_api = conectar_backblaze()
         bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
-        contenido_json = json.dumps(datos).encode('utf-8')  # Convertir los datos a JSON y luego a bytes
-        bucket.upload_bytes(contenido_json, ruta_archivo)  # Subir el archivo a Backblaze
+        contenido_json = json.dumps(datos).encode('utf-8')
+        bucket.upload_bytes(contenido_json, ruta_archivo)
         st.success(f"Archivo '{ruta_archivo}' guardado/actualizado en Backblaze.")
     except Exception as e:
         st.error(f"Error al guardar el archivo en Backblaze: {e}")
@@ -56,6 +52,10 @@ ARCHIVO_JSON = "wallets_data.json"
 
 # Cargar los datos desde Backblaze al iniciar
 datos_wallets = cargar_json_desde_backblaze(ARCHIVO_JSON)
+
+
+
+# Resto del código sigue igual...
 
 # ------ AÑADIR CSS PERSONALIZADO PARA LOS BOTONES Y SECCIONES ------
 st.markdown("""
