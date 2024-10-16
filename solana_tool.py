@@ -23,9 +23,9 @@ def cargar_json_desde_backblaze(ruta_archivo):
         destino = DownloadDestBytes()
         bucket.download_file_by_name(ruta_archivo, destino)
         
-        # Leer el contenido del archivo descargado
-        contenido_json = destino.get_bytes().decode('utf-8')
-        datos = json.loads(contenido_json)
+        # Obtener los datos del archivo descargado
+        contenido_json = destino.get_bytes()  # Esto ahora debería funcionar correctamente
+        datos = json.loads(contenido_json.decode('utf-8'))  # Convertir de bytes a string y luego a JSON
         st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
         
     except Exception as e:
