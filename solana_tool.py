@@ -102,9 +102,16 @@ if opcion == "🛠️ Agregar/Búsqueda/Modificar Wallets":
     # Botón para agregar una nueva wallet
     if st.button("Agregar Wallet"):
         if nueva_entidad and nueva_wallet and nuevo_label:
-            if nueva_entidad in datos_wallets:
-                datos_wallets[nueva_entidad].append({"label": nuevo_label, "direccion": nueva_wallet})
-            else:
+            # Comprobar si ya existe una entidad con el mismo nombre (independientemente de mayúsculas/minúsculas)
+            entidad_key = None
+            for entidad in datos_wallets:
+                if entidad.lower() == nueva_entidad.lower():
+                    entidad_key = entidad
+                    break
+
+            if entidad_key:  # Si la entidad ya existe (en cualquier forma de mayúsculas/minúsculas)
+                datos_wallets[entidad_key].append({"label": nuevo_label, "direccion": nueva_wallet})
+            else:  # Si es una nueva entidad
                 datos_wallets[nueva_entidad] = [{"label": nuevo_label, "direccion": nueva_wallet}]
             
             # Guardar los datos actualizados en S3
@@ -131,6 +138,50 @@ if opcion == "🛠️ Agregar/Búsqueda/Modificar Wallets":
                 break
         if not encontrado:
             st.error("❌ No se encontró ninguna wallet con esa dirección.")
+    st.markdown('</div>', unsafe_allow_html=True)  # Termina la sección
+
+    # Sección para gestionar (editar y eliminar) wallets
+    st.markdown('<div class="section">', unsafe_allow_html=True)  # Inicia la sección
+    st.header("Modificar Wallets")
+
+    # Dropdown para seleccionar una entidad
+    entidad_seleccionada = st.selectbox("Selecciona una Entidad", list(datos_wallets.keys()), key="entidad_editar")
+
+    if entidad_seleccionada:
+        # Dropdown para seleccionar una wallet
+        wallets_filtradas = datos_wallets[entidad_seleccionada]
+        wallet_seleccionada = st.selectbox(
+            "Selecciona una Wallet",
+            [wallet['label'] for wallet in wallets_filtradas],
+            key="wallet_editar"
+        )
+
+        # Cargar datos de la wallet seleccionada
+        if wallet_seleccionada:
+            wallet_info = next(
+                (wallet for wallet in wallets_filtradas if wallet['label'] == wallet_seleccionada), None
+            )
+
+            if wallet_info:
+                # Mostrar información de la wallet seleccionada
+                st.write(f"Dirección: {wallet_info['direccion']}")
+
+                # Inputs para editar la wallet seleccionada
+                nuevo_label = st.text_input("Nuevo Label", value=wallet_info['label'], key="nuevo_label")
+                nueva_direccion = st.text_input("Nueva Dirección", value=wallet_info['direccion'], key="nueva_direccion")
+
+                # Botón para guardar los cambios
+                if st.button("Guardar Cambios", key="guardar_cambios"):
+                    wallet_info['label'] = nuevo_label
+                    wallet_info['direccion'] = nueva_direccion
+                    guardar_json_en_s3(BUCKET_NAME, ARCHIVO_JSON, datos_wallets)
+                    st.success("✅ Cambios guardados correctamente.")
+
+                # Botón para eliminar la wallet
+                if st.button("Eliminar Wallet", key="eliminar_wallet"):
+                    datos_wallets[entidad_seleccionada].remove(wallet_info)
+                    guardar_json_en_s3(BUCKET_NAME, ARCHIVO_JSON, datos_wallets)
+                    st.success("✅ Wallet eliminada correctamente.")
     st.markdown('</div>', unsafe_allow_html=True)  # Termina la sección
 
 elif opcion == "📚 Listado de Entidades":
