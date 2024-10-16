@@ -1,6 +1,7 @@
-from b2sdk.v1 import InMemoryAccountInfo, B2Api, DownloadDestBytes
-import json
 import streamlit as st
+from b2sdk.v1 import InMemoryAccountInfo, B2Api
+import json
+from io import BytesIO
 
 # Función para autenticar con Backblaze usando los secretos de Streamlit
 def conectar_backblaze():
@@ -19,21 +20,15 @@ def cargar_json_desde_backblaze(ruta_archivo):
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
 
     try:
-        # Crear un objeto de destino en memoria
-        destino = DownloadDestBytes()
-        
-        # Descargar el archivo y pasar el destino explícitamente
-        bucket.download_file_by_name(ruta_archivo, destino)
-
-        # Leer el contenido descargado y decodificarlo
-        contenido_json = destino.get_bytes()
-        datos = json.loads(contenido_json.decode('utf-8'))
-        st.success(f"Archivo '{ruta_archivo}' cargado correctamente desde Backblaze.")
+        # Descargar el archivo en un stream
+        file_info, stream = bucket.download_file_by_name(ruta_archivo)
+        contenido_json = stream.read()  # Lee todo el contenido del stream
+        datos = json.loads(contenido_json.decode('utf-8'))  # Convertir de bytes a string y luego a JSON
+        st.success(f"Archivo '{ruta_archivo}' cargado correctamente.")
         return datos
-
     except Exception as e:
         st.error(f"Error al cargar el archivo desde Backblaze: {e}")
-        return None
+        return None  # Devolver None en lugar de datos por defecto para poder manejar errores
 
 # Función para guardar un archivo JSON en Backblaze
 def guardar_json_en_backblaze(ruta_archivo, datos):
@@ -55,8 +50,12 @@ datos_wallets = cargar_json_desde_backblaze(ARCHIVO_JSON)
 if datos_wallets is None:
     st.error("No se cargaron los datos desde Backblaze.")
 else:
-    # Aquí puedes agregar el código para manejar los datos cargados correctamente
-    st.write("Datos cargados correctamente:", datos_wallets)
+    # Confirmar que los datos son un diccionario
+    if isinstance(datos_wallets, dict):
+        st.write("Datos cargados correctamente:", datos_wallets)
+    else:
+        st.error("El archivo cargado no contiene un diccionario válido.")
+
 
 # Añadir CSS personalizado para los botones y secciones
 st.markdown("""
