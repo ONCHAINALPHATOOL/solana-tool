@@ -3,10 +3,6 @@ import json
 import streamlit as st
 from io import BytesIO
 
-# Depuración: Mostrar los secretos cargados
-st.write("Se cargaron los siguientes secretos desde Streamlit:")
-st.write(st.secrets)  # Esto mostrará los secretos cargados
-
 # Función para conectarse a S3 usando las claves almacenadas en Streamlit Secrets
 def conectar_s3():
     s3 = boto3.client(
@@ -17,17 +13,20 @@ def conectar_s3():
     )
     return s3
 
-
 # Función para cargar el archivo JSON desde S3
 def cargar_json_desde_s3(bucket_name, archivo_json):
     s3 = conectar_s3()
     try:
-        # Descargar el archivo JSON
+        # Intentar descargar el archivo JSON
         response = s3.get_object(Bucket=bucket_name, Key=archivo_json)
         contenido_json = response["Body"].read().decode("utf-8")
         datos = json.loads(contenido_json)
         st.success(f"Archivo '{archivo_json}' cargado correctamente.")
         return datos
+    except s3.exceptions.NoSuchKey:
+        # Si el archivo no existe, retornamos None para inicializar un archivo vacío más tarde
+        st.warning(f"El archivo '{archivo_json}' no existe en S3. Se creará uno vacío.")
+        return None
     except Exception as e:
         st.error(f"Error al cargar el archivo desde S3: {e}")
         return None
@@ -49,9 +48,11 @@ ARCHIVO_JSON = "wallets_data.json"
 # Cargar los datos desde S3 al iniciar la app
 datos_wallets = cargar_json_desde_s3(BUCKET_NAME, ARCHIVO_JSON)
 
+# Si el archivo no existe o no se encontraron datos, inicializamos con un JSON vacío y lo guardamos
 if datos_wallets is None:
     st.warning("No se encontraron datos. Se inicializará un archivo JSON vacío.")
     datos_wallets = {}
+    guardar_json_en_s3(BUCKET_NAME, ARCHIVO_JSON, datos_wallets)  # Guardar archivo vacío en S3
 
 # Mostrar los datos en la app (puedes agregar aquí tu lógica de la app)
 st.write("Datos cargados:", datos_wallets)
