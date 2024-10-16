@@ -11,11 +11,12 @@ st.write(st.secrets)  # Esto mostrará los secretos cargados
 def conectar_s3():
     s3 = boto3.client(
         "s3",
-        aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
-        aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+        aws_access_key_id=st.secrets["default"]["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=st.secrets["default"]["AWS_SECRET_ACCESS_KEY"],
         region_name="us-east-1"  # Ajusta la región si es diferente
     )
     return s3
+
 
 # Función para cargar el archivo JSON desde S3
 def cargar_json_desde_s3(bucket_name, archivo_json):
