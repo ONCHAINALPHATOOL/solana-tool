@@ -54,9 +54,6 @@ if datos_wallets is None:
     datos_wallets = {}
     guardar_json_en_s3(BUCKET_NAME, ARCHIVO_JSON, datos_wallets)  # Guardar archivo vacío en S3
 
-# Mostrar los datos en la app (puedes agregar aquí tu lógica de la app)
-st.write("Datos cargados:", datos_wallets)
-
 # Añadir CSS personalizado para los botones y secciones
 st.markdown("""
     <style>
@@ -152,4 +149,3 @@ elif opcion == "📚 Listado de Entidades":
                 
                 if st.button(f"Transacciones de {wallet['label']}"):
                     st.markdown(f'<a href="{url_solanatracker}" target="_blank">Abrir en SolanaTracker</a>', unsafe_allow_html=True)
-
