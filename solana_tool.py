@@ -3,6 +3,10 @@ import json
 import streamlit as st
 from io import BytesIO
 
+# Depuración: Mostrar los secretos cargados
+st.write("Se cargaron los siguientes secretos desde Streamlit:")
+st.write(st.secrets)  # Esto mostrará los secretos cargados
+
 # Función para conectarse a S3 usando las claves almacenadas en Streamlit Secrets
 def conectar_s3():
     s3 = boto3.client(
@@ -50,7 +54,6 @@ if datos_wallets is None:
 
 # Mostrar los datos en la app (puedes agregar aquí tu lógica de la app)
 st.write("Datos cargados:", datos_wallets)
-
 
 # Añadir CSS personalizado para los botones y secciones
 st.markdown("""
@@ -106,8 +109,8 @@ if opcion == "🛠️ Agregar/Búsqueda/Modificar Wallets":
             else:
                 datos_wallets[nueva_entidad] = [{"label": nuevo_label, "direccion": nueva_wallet}]
             
-            # Guardar los datos actualizados en Backblaze
-            guardar_json_en_backblaze(ARCHIVO_JSON, datos_wallets)
+            # Guardar los datos actualizados en S3
+            guardar_json_en_s3(BUCKET_NAME, ARCHIVO_JSON, datos_wallets)
             st.success(f"✅ Wallet agregada a la entidad '{nueva_entidad}'")
         else:
             st.error("❌ Por favor, completa todos los campos")
