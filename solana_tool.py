@@ -1,61 +1,55 @@
-import streamlit as st
-from b2sdk.v1 import InMemoryAccountInfo, B2Api
+import boto3
 import json
+import streamlit as st
 from io import BytesIO
 
-# Función para autenticar con Backblaze usando los secretos de Streamlit
-def conectar_backblaze():
-    info = InMemoryAccountInfo()
-    b2_api = B2Api(info)
-    b2_api.authorize_account(
-        "production",
-        st.secrets["backblaze"]["KEY_ID"],
-        st.secrets["backblaze"]["APPLICATION_KEY"]
+# Función para conectarse a S3 usando las claves almacenadas en Streamlit Secrets
+def conectar_s3():
+    s3 = boto3.client(
+        "s3",
+        aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+        region_name="us-east-1"  # Ajusta la región si es diferente
     )
-    return b2_api
+    return s3
 
-# Función para cargar un archivo JSON desde Backblaze
-def cargar_json_desde_backblaze(ruta_archivo):
-    b2_api = conectar_backblaze()
-    bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
-
+# Función para cargar el archivo JSON desde S3
+def cargar_json_desde_s3(bucket_name, archivo_json):
+    s3 = conectar_s3()
     try:
-        # Descargar el archivo en un stream
-        file_info, stream = bucket.download_file_by_name(ruta_archivo)
-        contenido_json = stream.read()  # Lee todo el contenido del stream
-        datos = json.loads(contenido_json.decode('utf-8'))  # Convertir de bytes a string y luego a JSON
-        st.success(f"Archivo '{ruta_archivo}' cargado correctamente.")
+        # Descargar el archivo JSON
+        response = s3.get_object(Bucket=bucket_name, Key=archivo_json)
+        contenido_json = response["Body"].read().decode("utf-8")
+        datos = json.loads(contenido_json)
+        st.success(f"Archivo '{archivo_json}' cargado correctamente.")
         return datos
     except Exception as e:
-        st.error(f"Error al cargar el archivo desde Backblaze: {e}")
-        return None  # Devolver None en lugar de datos por defecto para poder manejar errores
+        st.error(f"Error al cargar el archivo desde S3: {e}")
+        return None
 
-# Función para guardar un archivo JSON en Backblaze
-def guardar_json_en_backblaze(ruta_archivo, datos):
+# Función para guardar un archivo JSON en S3
+def guardar_json_en_s3(bucket_name, archivo_json, datos):
+    s3 = conectar_s3()
     try:
-        b2_api = conectar_backblaze()
-        bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
-        contenido_json = json.dumps(datos).encode('utf-8')
-        bucket.upload_bytes(contenido_json, ruta_archivo)
-        st.success(f"Archivo '{ruta_archivo}' guardado/actualizado en Backblaze.")
+        contenido_json = json.dumps(datos).encode("utf-8")
+        s3.put_object(Bucket=bucket_name, Key=archivo_json, Body=contenido_json)
+        st.success(f"Archivo '{archivo_json}' guardado correctamente en S3.")
     except Exception as e:
-        st.error(f"Error al guardar el archivo en Backblaze: {e}")
+        st.error(f"Error al guardar el archivo en S3: {e}")
 
-# Ruta del archivo JSON en Backblaze
+# Nombre del bucket y archivo JSON
+BUCKET_NAME = "miapp-solana-bucket"
 ARCHIVO_JSON = "wallets_data.json"
 
-# Cargar los datos desde Backblaze al iniciar
-datos_wallets = cargar_json_desde_backblaze(ARCHIVO_JSON)
+# Cargar los datos desde S3 al iniciar la app
+datos_wallets = cargar_json_desde_s3(BUCKET_NAME, ARCHIVO_JSON)
 
 if datos_wallets is None:
-    st.error("No se cargaron los datos desde Backblaze.")
-else:
-    # Confirmar que los datos son un diccionario
-    if isinstance(datos_wallets, dict):
-        st.write("Datos cargados correctamente:", datos_wallets)
-    else:
-        st.error("El archivo cargado no contiene un diccionario válido.")
+    st.warning("No se encontraron datos. Se inicializará un archivo JSON vacío.")
+    datos_wallets = {}
 
+# Mostrar los datos en la app (puedes agregar aquí tu lógica de la app)
+st.write("Datos cargados:", datos_wallets)
 
 
 # Añadir CSS personalizado para los botones y secciones
