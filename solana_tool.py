@@ -57,6 +57,7 @@ else:
         st.error("El archivo cargado no contiene un diccionario válido.")
 
 
+
 # Añadir CSS personalizado para los botones y secciones
 st.markdown("""
     <style>
