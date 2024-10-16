@@ -14,20 +14,30 @@ def conectar_backblaze():
     )
     return b2_api
 
-# Función para cargar un archivo JSON desde Backblaze (si existe)
 def cargar_json_desde_backblaze(ruta_archivo):
     b2_api = conectar_backblaze()
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
+    
+    # Imprimir la lista de archivos en el bucket
+    st.write("Archivos en el bucket:")
+    for file_version, folder_name in bucket.ls("", show_versions=False):
+        st.write(f"- {file_version.file_name}")
+    
     try:
-        file_info, file_version = bucket.download_file_by_name(ruta_archivo, DownloadDestBytes())
-        datos = json.loads(file_version.bytes_)
+        # Intentar descargar el archivo
+        archivo = bucket.download_file_by_name(ruta_archivo)
+        datos = json.loads(archivo.content)
+        st.write("Archivo cargado con éxito")
     except Exception as e:
-        st.warning("No se encontró el archivo en Backblaze. Inicializando datos por defecto.")
+        # Si hay un error, mostrarlo
+        st.error(f"Error al cargar el archivo desde Backblaze: {str(e)}")
+        # Inicializar datos por defecto
         datos = {
             "Drae": [{"label": "120K", "direccion": "6N9CDZ7sNRYQ7BWDJX3ibL3359rVXN9ywvaEebQqEo8d"}],
             "Pedro": [{"label": "christ?", "direccion": "DhxbZcn8oCgafGHSg1WX1bMhv5txGRraVMmR6G6RVnck"}]
         }
     return datos
+
 
 # Función para guardar un archivo JSON en Backblaze
 def guardar_json_en_backblaze(ruta_archivo, datos):
