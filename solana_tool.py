@@ -1,5 +1,5 @@
 import streamlit as st
-from b2sdk.v1 import InMemoryAccountInfo, B2Api, DownloadDestBytes
+from b2sdk.v1 import InMemoryAccountInfo, B2Api
 import json
 import os
 
@@ -19,12 +19,9 @@ def cargar_json_desde_backblaze(ruta_archivo):
     bucket = b2_api.get_bucket_by_name(st.secrets["backblaze"]["BUCKET_NAME"])
     
     try:
-        # Descargar el archivo y guardarlo en memoria
-        destino = DownloadDestBytes()
-        bucket.download_file_by_name(ruta_archivo, destino)
-        
-        # Obtener los datos del archivo descargado
-        contenido_json = destino.get_bytes()  # Esto ahora debería funcionar correctamente
+        # Descargar el archivo y leerlo directamente como un stream
+        file_info, file_stream = bucket.download_file_by_name(ruta_archivo)
+        contenido_json = file_stream.read()  # Leer el contenido completo del archivo
         datos = json.loads(contenido_json.decode('utf-8'))  # Convertir de bytes a string y luego a JSON
         st.success(f"Archivo '{ruta_archivo}' cargado con éxito desde Backblaze.")
         
@@ -50,6 +47,7 @@ ARCHIVO_JSON = "wallets_data.json"
 
 # Cargar los datos desde Backblaze al iniciar
 datos_wallets = cargar_json_desde_backblaze(ARCHIVO_JSON)
+
 
 
 # ------ AÑADIR CSS PERSONALIZADO PARA LOS BOTONES Y SECCIONES ------
