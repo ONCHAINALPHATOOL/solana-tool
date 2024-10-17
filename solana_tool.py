@@ -41,6 +41,15 @@ def guardar_json_en_s3(bucket_name, archivo_json, datos):
     except Exception as e:
         st.error(f"Error al guardar el archivo en S3: {e}")
 
+# Función para limpiar entidades vacías
+def limpiar_entidades_vacias(datos_wallets):
+    entidades_a_eliminar = [entidad for entidad, wallets in datos_wallets.items() if not wallets]
+    for entidad in entidades_a_eliminar:
+        del datos_wallets[entidad]
+    if entidades_a_eliminar:
+        st.info(f"Se han eliminado las entidades vacías: {', '.join(entidades_a_eliminar)}")
+    return datos_wallets
+
 # Nombre del bucket y archivo JSON
 BUCKET_NAME = "miapp-solana-bucket"
 ARCHIVO_JSON = "wallets_data.json"
@@ -53,6 +62,10 @@ if datos_wallets is None:
     st.warning("No se encontraron datos. Se inicializará un archivo JSON vacío.")
     datos_wallets = {}
     guardar_json_en_s3(BUCKET_NAME, ARCHIVO_JSON, datos_wallets)  # Guardar archivo vacío en S3
+
+# Limpiar las entidades vacías
+datos_wallets = limpiar_entidades_vacias(datos_wallets)
+guardar_json_en_s3(BUCKET_NAME, ARCHIVO_JSON, datos_wallets)
 
 # Añadir CSS personalizado para los botones y secciones
 st.markdown("""
@@ -197,6 +210,10 @@ if opcion == "🛠️ Agregar/Búsqueda/Modificar Wallets":
                     datos_wallets[entidad_seleccionada].remove(wallet_info)
                     guardar_json_en_s3(BUCKET_NAME, ARCHIVO_JSON, datos_wallets)
                     st.success("✅ Wallet eliminada correctamente.")
+
+        # Limpiar entidades vacías después de eliminar wallets
+        datos_wallets = limpiar_entidades_vacias(datos_wallets)
+        guardar_json_en_s3(BUCKET_NAME, ARCHIVO_JSON, datos_wallets)
     st.markdown('</div>', unsafe_allow_html=True)  # Termina la sección
 
 elif opcion == "📚 Listado de Entidades":
