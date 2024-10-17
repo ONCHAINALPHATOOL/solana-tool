@@ -67,9 +67,23 @@ if datos_wallets is None:
 datos_wallets = limpiar_entidades_vacias(datos_wallets)
 guardar_json_en_s3(BUCKET_NAME, ARCHIVO_JSON, datos_wallets)
 
-# Añadir CSS personalizado para los botones y secciones
+# Añadir CSS personalizado para los botones y secciones, incluyendo el botón "View"
 st.markdown("""
     <style>
+    .small-button {
+        font-size: 12px;
+        padding: 5px 10px;
+        background-color: #008CBA; /* Color de fondo */
+        color: black; /* Color del texto del botón */
+        border-radius: 5px;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 5px;
+    }
+    .small-button:hover {
+        background-color: #4CAF50;
+        color: white;
+    }
     .option {
         display: inline-block;
         border-radius: 12px;
@@ -83,34 +97,19 @@ st.markdown("""
         cursor: pointer;
         transition-duration: 0.4s;
     }
-    
     .option:hover {
         background-color: #4CAF50;
         color: white;
     }
-
     .section {
         background-color: #f0f0f0;
         padding: 2px;
         border-radius: 2px;
         margin-bottom: 20px;
     }
-
-    .small-button {
-        font-size: 12px;
-        padding: 5px 10px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    .small-button:hover {
-        background-color: #45a049;
-    }
     </style>
 """, unsafe_allow_html=True)
+
 
 # Encabezado principal de la aplicación
 st.title("SOLANA TOOL ONCHAIN ALPHA")
