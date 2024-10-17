@@ -95,28 +95,43 @@ if opcion == "🛠️ Agregar/Búsqueda/Modificar Wallets":
     # Sección para agregar una nueva entidad y wallet
     st.markdown('<div class="section">', unsafe_allow_html=True)  # Inicia la sección
     st.header("Agregar Entidad y Wallet")
-    nueva_entidad = st.text_input("📝 Nombre de la Entidad")
+
+    # Desplegable con scroll para seleccionar una entidad existente o agregar una nueva
+    lista_entidades = list(datos_wallets.keys())
+    nueva_entidad = st.selectbox("Selecciona o escribe una Entidad", options=lista_entidades + ["Nueva Entidad..."])
+
+    # Si seleccionan "Nueva Entidad", entonces aparece un campo de texto
+    if nueva_entidad == "Nueva Entidad...":
+        nueva_entidad = st.text_input("📝 Nombre de la Nueva Entidad")
+
     nueva_wallet = st.text_input("🔑 Dirección de la Wallet")
     nuevo_label = st.text_input("🏷️ Label de la Wallet")
 
     # Botón para agregar una nueva wallet
     if st.button("Agregar Wallet"):
         if nueva_entidad and nueva_wallet and nuevo_label:
-            # Comprobar si ya existe una entidad con el mismo nombre (independientemente de mayúsculas/minúsculas)
+            # Comprobar si ya existe la dirección dentro de la entidad seleccionada
             entidad_key = None
             for entidad in datos_wallets:
                 if entidad.lower() == nueva_entidad.lower():
                     entidad_key = entidad
                     break
 
-            if entidad_key:  # Si la entidad ya existe (en cualquier forma de mayúsculas/minúsculas)
+            # Crear una nueva entidad si no existe
+            if not entidad_key:
+                entidad_key = nueva_entidad
+                datos_wallets[entidad_key] = []
+
+            # Verificar si la wallet ya existe dentro de la entidad
+            wallet_existente = any(wallet['direccion'] == nueva_wallet for wallet in datos_wallets[entidad_key])
+
+            if wallet_existente:
+                st.error(f"❌ La wallet con la dirección '{nueva_wallet}' ya existe en la entidad '{entidad_key}'.")
+            else:
+                # Agregar la nueva wallet
                 datos_wallets[entidad_key].append({"label": nuevo_label, "direccion": nueva_wallet})
-            else:  # Si es una nueva entidad
-                datos_wallets[nueva_entidad] = [{"label": nuevo_label, "direccion": nueva_wallet}]
-            
-            # Guardar los datos actualizados en S3
-            guardar_json_en_s3(BUCKET_NAME, ARCHIVO_JSON, datos_wallets)
-            st.success(f"✅ Wallet agregada a la entidad '{nueva_entidad}'")
+                guardar_json_en_s3(BUCKET_NAME, ARCHIVO_JSON, datos_wallets)
+                st.success(f"✅ Wallet agregada a la entidad '{entidad_key}'")
         else:
             st.error("❌ Por favor, completa todos los campos")
     st.markdown('</div>', unsafe_allow_html=True)  # Termina la sección
@@ -195,5 +210,5 @@ elif opcion == "📚 Listado de Entidades":
                 # Enlace para ver las transacciones en SolanaTracker
                 url_solanatracker = f"https://www.solanatracker.io/wallet/{wallet['direccion']}"
                 
-                if st.button(f"Transacciones de {wallet['label']}"):
+                if st.button(f"Transacciones de {wallet['label']}", key=f"transacciones_{wallet['label']}"):
                     st.markdown(f'<a href="{url_solanatracker}" target="_blank">Abrir en SolanaTracker</a>', unsafe_allow_html=True)
