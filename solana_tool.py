@@ -95,6 +95,20 @@ st.markdown("""
         border-radius: 2px;
         margin-bottom: 20px;
     }
+
+    .small-button {
+        font-size: 12px;
+        padding: 5px 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .small-button:hover {
+        background-color: #45a049;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -227,6 +241,5 @@ elif opcion == "📚 Listado de Entidades":
                 # Enlace para ver las transacciones en SolanaTracker
                 url_solanatracker = f"https://www.solanatracker.io/wallet/{wallet['direccion']}"
                 
-                # Asignar una clave única al botón usando la entidad, la dirección y el índice
-                if st.button(f"Transacciones de {wallet['label']}", key=f"transacciones_{entidad}_{wallet['direccion']}_{idx}"):
-                    st.markdown(f'<a href="{url_solanatracker}" target="_blank">Abrir en SolanaTracker</a>', unsafe_allow_html=True)
+                # Botón pequeño HTML para las transacciones
+                st.markdown(f'<a class="small-button" href="{url_solanatracker}" target="_blank">View</a>', unsafe_allow_html=True)
