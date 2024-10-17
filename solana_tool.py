@@ -218,17 +218,15 @@ if opcion == "🛠️ Agregar/Búsqueda/Modificar Wallets":
 
 elif opcion == "📚 Listado de Entidades":
     # Sección para mostrar entidades y wallets
-    st.header("Listado de Entidades y Wallets")
-    for entidad, wallets in datos_wallets.items():
-        with st.expander(f"📌 {entidad}"):
-            for idx, wallet in enumerate(wallets):
-                st.markdown(f"🔹 **Label**: {wallet['label']}, **Dirección**: `{wallet['direccion']}`")
-                
-                # Enlace para ver las transacciones en SolanaTracker
-                url_solanatracker = f"https://www.solanatracker.io/wallet/{wallet['direccion']}"
-                
-                # Asignar una clave única al botón usando la combinación del índice y la dirección
-                if st.button(f"Transacciones de {wallet['label']}", key=f"transacciones_{wallet['direccion']}_{idx}"):
-                    st.markdown(f'<a href="{url_solanatracker}" target="_blank">Abrir en SolanaTracker</a>', unsafe_allow_html=True)
-
-
+st.header("Listado de Entidades y Wallets")
+for entidad, wallets in datos_wallets.items():
+    with st.expander(f"📌 {entidad}"):
+        for idx, wallet in enumerate(wallets):
+            st.markdown(f"🔹 **Label**: {wallet['label']}, **Dirección**: `{wallet['direccion']}`")
+            
+            # Enlace para ver las transacciones en SolanaTracker
+            url_solanatracker = f"https://www.solanatracker.io/wallet/{wallet['direccion']}"
+            
+            # Asignar una clave única al botón usando la entidad, la dirección y el índice
+            if st.button(f"Transacciones de {wallet['label']}", key=f"transacciones_{entidad}_{wallet['direccion']}_{idx}"):
+                st.markdown(f'<a href="{url_solanatracker}" target="_blank">Abrir en SolanaTracker</a>', unsafe_allow_html=True)
